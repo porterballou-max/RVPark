@@ -1,0 +1,65 @@
+# Build results
+
+bin/
+obj/
+
+# Visual Studio files
+
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider / VS Code
+
+.idea/
+.vscode/
+
+Logs
+
+*.log
+
+# OS generated files
+
+.DS_Store
+Thumbs.db
+
+# Node modules (if added later)
+
+node_modules/
+
+Publish output
+
+publish/
+
+Test Results
+
+TestResults/
+
+# NuGet
+
+*.nupkg
+*.snupkg
+
+# Local app settings overrides
+
+appsettings.Development.json
+
+# Resharper
+
+_ReSharper*/
+*.DotSettings.user
+
+# Coverage
+
+coverage/
+
+# Temporary files
+
+*.tmp
+*.temp
+
+# Screenshots (only for turning in assignments)
+
+screenshots/
