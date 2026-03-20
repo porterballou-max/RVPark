@@ -1,4 +1,7 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
-
-// Write your JavaScript code.
+﻿// script to unlock the payments, reservations, profile pages after submit has been clicked
+// on the login page
+document.getElementById("loginLink").addEventListener("click", function() {
+    doucment.getElementById("paymentsLink").removeAttribute("disabled");
+    document.getElementById("reservationsLink").removeAttribute("disabled");
+    document.getElementById("profileLink").removeAttribute("disabled");
+});
