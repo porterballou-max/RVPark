@@ -1,10 +1,31 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Client Profile";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="app-container">
+
+    <!-- Main Content -->
+    <div class="main-content">
+
+        <!-- Profile Card -->
+        <div class="profile-container">
+
+            <div class="avatar-icon">
+                <i class="bi bi-person-circle"></i>
+            </div>
+
+            <p class="contact">(999) 999-9999</p>
+            <p class="contact">example@mail.com</p>
+
+            <div class="button-group">
+                <button class="btn btn-dark">Edit Personal Info</button>
+                <button class="btn btn-dark">Set Vehicle</button>
+                <button class="btn btn-dark">Edit Payment Info</button>
+            </div>
+
+        </div>
+    </div>
+
 </div>
