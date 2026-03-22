@@ -25,24 +25,22 @@
                 <div class="navbar-collapse collapse d-sm-flex justify-content-between align-items-center">
 
                     <!-- Left side -->
-                    @if (Context.Session.GetString("User") == "Exists")
-                        {
-                            <ul class="navbar-nav align-items-center">
+                    <ul class="navbar-nav align-items-center">
 
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-page="/Reservations/Index">Reservations</a>
-                                </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-page="/Reservations/Index">Reservations</a>
+                        </li>
 
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-page="/Payments">Payments</a>
-                                </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-page="/Payments">Payments</a>
+                        </li>
 
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-page="/Profile/Index">Profile</a>
-                                </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-page="/Profile/Index">Profile</a>
+                        </li>
 
-                            </ul>
-                        }
+                    </ul>
+
 
                     <!-- Right side -->
                     <ul class="navbar-nav align-items-center">

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 namespace RVfamcamp.Pages
@@ -10,15 +11,22 @@ namespace RVfamcamp.Pages
         {
 
         }
-        public IActionResult OnPost()
+        // Login information
+        public class LoginInput
         {
-            if (Request.Form["email_input"] == "temp@gmail" && Request.Form["password_input"] == "temp")
-            {
-                HttpContext.Session.SetString("User", "Exists");
-                return RedirectToPage("/Index");
-            }
+            public string Email { get; set; }
+            public string Password { get; set; }
+        }
 
-            return Page();
+        // Input binded in the cshtml
+        [BindProperty]
+        public LoginInput Input { get; set; }
+
+        // OnPost of form save the information in viewData 
+        public void OnPost()
+        {
+            ViewData["Email"] = Input.Email;
+            ViewData["Password"] = Input.Password;
         }
 
     }

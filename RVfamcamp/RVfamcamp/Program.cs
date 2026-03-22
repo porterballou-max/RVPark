@@ -6,14 +6,7 @@ builder.Services.AddRazorPages();
 // For database
 AppDomain.CurrentDomain.SetData("DataDirectory", Directory.GetCurrentDirectory());
 
-// Session for login
-builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession();
-
 var app = builder.Build();
-
-// Start session
-app.UseSession();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
