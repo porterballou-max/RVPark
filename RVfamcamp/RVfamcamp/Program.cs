@@ -1,7 +1,11 @@
+using RVfamcamp.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+// Add SQL statements to whole project
+builder.Services.AddScoped<DatabaseStatements>();
 
 // For database
 AppDomain.CurrentDomain.SetData("DataDirectory", Directory.GetCurrentDirectory());
