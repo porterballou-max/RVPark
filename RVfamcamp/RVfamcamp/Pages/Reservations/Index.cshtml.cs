@@ -26,7 +26,19 @@ public class ReservationsIndexModel : PageModel
                 Reservations = statements.GetUsersReservations(userID);
             }
         }
-
+        else
+        {
+            Reservations.Add
+            (
+                new Reservation
+                {
+                    reservationId = 1,
+                    startDate = DateTime.Today,
+                    endDate = DateTime.Today.AddDays(3),
+                    confirmationNumber = 101
+                }
+            );
+        }
     } 
 }
 
