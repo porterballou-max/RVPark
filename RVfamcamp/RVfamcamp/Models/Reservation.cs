@@ -1,21 +1,10 @@
-﻿using System;
+﻿namespace RVfamcamp.Models;
 
-namespace RVfamcamp.Models
+public class Reservation
 {
-    public class Reservation
-    {
-        public int Id { get; set; }
-
-        public string SiteNumber { get; set; }
-
-        public DateTime CheckIn { get; set; }
-
-        public DateTime CheckOut { get; set; }
-
-        public int GuestCount { get; set; }
-
-        public double TotalCost { get; set; }
-
-        public string Status { get; set; }
-    }
+    public int ReservationId { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public int ConfirmationNumber { get; set; }
+    public int UserAccountId { get; set; }
 }

@@ -10,22 +10,27 @@
 
     <div class="mb-3">
         <label class="form-label">Site Number</label>
-        <input asp-for="Reservation.SiteNumber" class="form-control" />
+        <input asp-for="Reservation.ReservationId" class="form-control" />
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Check-In</label>
-        <input asp-for="Reservation.CheckIn" type="date" class="form-control" />
+        <label class="form-label" asp-for="Reservation.StartDate">Check-In</label>
+        <input asp-for="Reservation.StartDate" type="date" class="form-control" />
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Check-Out</label>
-        <input asp-for="Reservation.CheckOut" type="date" class="form-control" />
+        <label class="form-label" asp-for="Reservation.EndDate"></label>
+        <input asp-for="Reservation.EndDate" type="date" class="form-control" />
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Guests</label>
-        <input asp-for="Reservation.GuestCount" class="form-control" />
+        <label class="form-label" asp-for="Reservation.ConfirmationNumber">Confirmation Number</label>
+        <input asp-for="Reservation.ConfirmationNumber" class="form-control" />
+    </div>
+    
+    <div class="mb-3">
+        <label class="form-label" asp-for="Reservation.UserAccountId">User Account Id</label>
+        <input asp-for="Reservation.UserAccountId" class="form-control" />
     </div>
 
     <button type="submit" class="btn btn-success">Create</button>

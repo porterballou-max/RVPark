@@ -29,16 +29,15 @@
             foreach (var r in Model.Reservations)
             {
                 <tr>
-                    <td>@r.SiteNumber</td>
-                    <td>@r.CheckIn.ToShortDateString()</td>
-                    <td>@r.CheckOut.ToShortDateString()</td>
-                    <td>@r.GuestCount</td>
-                    <td>$@r.TotalCost</td>
-                    <td>@r.Status</td>
+                    <td>@r.ReservationId</td>
+                    <td>@r.StartDate.ToShortDateString()</td>
+                    <td>@r.EndDate.ToShortDateString()</td>
+                    <td>@r.ConfirmationNumber</td>
+                    <td>$@r.UserAccountId</td>
                     <td>
-                        <a class="btn btn-sm btn-outline-primary" asp-page="/Reservations/Details" asp-route-id="@r.Id">View</a>
-                        <a class="btn btn-sm btn-outline-secondary" asp-page="/Reservations/Edit" asp-route-id="@r.Id">Edit</a>
-                        <a class="btn btn-sm btn-outline-danger" asp-page="/Reservations/Delete" asp-route-id="@r.Id">Delete</a>
+                        <a class="btn btn-sm btn-outline-primary" asp-page="/Reservations/Details" asp-route-id="@r.ReservationId">View</a>
+                        <a class="btn btn-sm btn-outline-secondary" asp-page="/Reservations/Edit" asp-route-id="@r.ReservationId">Edit</a>
+                        <a class="btn btn-sm btn-outline-danger" asp-page="/Reservations/Delete" asp-route-id="@r.ReservationId">Delete</a>
                     </td>
                 </tr>
             }

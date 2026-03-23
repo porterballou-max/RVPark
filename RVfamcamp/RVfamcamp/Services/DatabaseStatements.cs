@@ -108,6 +108,166 @@ namespace RVfamcamp.Services
             cmd.ExecuteNonQuery();
         }
 
+        // READ: Reservations
+        public List<Reservation> GetAllReservations()
+        {
+            var reservations = new List<Reservation>();
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("SELECT reservationID, startDate, endDate, confirmationNumber, userAccountID FROM Reservation", conn); 
+            conn.Open();
+            using SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                reservations.Add(
+                    
+                    new Reservation
+                    {
+                        ReservationId = reader.GetInt32(0),
+                    }
+                    
+                );
+            }
+            return reservations;
+        }
+        
+        // DELETE: Reservation 
+        public void RemoveReservationById(Reservation reservation)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            
+            // Delete entry in vehicle reservation if it exists. 
+            var cmdDelVehicleRegistration =
+                new SqlCommand("DELETE FROM VehicleReservation vr WHERE vr.reservationID == @reservationId");
+            cmdDelVehicleRegistration.Parameters.AddWithValue("@reservationId", reservation.ReservationId);
+            conn.Open();
+            cmdDelVehicleRegistration.ExecuteNonQuery();
+            conn.Close();
+            
+            // Delete reservation. 
+            var cmd = new SqlCommand("DELETE FROM Reservation WHERE reservationID = @reservationID", conn);
+            cmd.Parameters.AddWithValue("@reservationID", reservation.ReservationId);
+            conn.Open();
+            cmd.ExecuteNonQuery();
+            conn.Close();
+        }
+
+        // Retrieves all Reservation objects whose 'startDate' column corresponds to the given date. 
+        // Note that time is not considered in this query. So, if two DateTime columns are identical in Date but not in Time, that does not matter to this function. 
+        private IList<Reservation> GetArrivalsForDate(DateOnly date)
+        {
+            IList<Reservation> reservations = new List<Reservation>();
+            using var conn = new SqlConnection(_connectionString);
+
+            var cmd = new SqlCommand(
+                """
+                SELECT ReservationID, startDate, endDate, confirmationNumber, userAccountID FROM Reservation
+                WHERE CAST(startDate AS DATE) = @ArrivalDate
+                """
+            );
+            cmd.Parameters.AddWithValue("@ArrivalDate", date);            
+            
+            conn.Open();
+            
+            using SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                reservations.Add(
+                    new Reservation
+                    {
+                        ReservationId = reader.GetInt32(0),
+                        StartDate = reader.GetDateTime(1),
+                        EndDate = reader.GetDateTime(2),
+                        ConfirmationNumber = reader.GetInt32(3),
+                        UserAccountId =  reader.GetInt32(4),
+                    }
+                );
+            }
+
+            return reservations;
+        }
+
+        // Returns all Reservations whose 'endDate' column corresponds to the given date column. 
+        // Note that time is not considered in this query. So, if two DateTime columns are identical in Date but not in Time, that does not matter to this function.
+        private IList<Reservation> GetDeparturesForDate(DateOnly date)
+        {
+            IList<Reservation> reservations = new List<Reservation>();
+            using var conn = new SqlConnection(_connectionString);
+
+            var cmd = new SqlCommand(
+                """
+                SELECT ReservationID, startDate, endDate, confirmationNumber, userAccountID FROM Reservation
+                WHERE CAST(endDate AS DATE) = @DepartureDate
+                """
+            );
+            cmd.Parameters.AddWithValue("@DepartureDate", date);            
+            
+            conn.Open();
+            
+            using SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                reservations.Add(
+                    new Reservation
+                    {
+                        ReservationId = reader.GetInt32(0),
+                        StartDate = reader.GetDateTime(1),
+                        EndDate = reader.GetDateTime(2),
+                        ConfirmationNumber = reader.GetInt32(3),
+                        UserAccountId =  reader.GetInt32(4),
+                    }
+                );
+            }
+
+            return reservations;
+        }
+
+        // A QoL function that allows you to retrieve arrivals and departures through a single function call. 
+        // This function fulfills the CRUD requirements for Report 1: Selection of arrivals and departures for a given date. 
+        public IList<IList<Reservation>> GetArrivalsAndDeparturesForDate(DateOnly date)
+        {
+            return new List<IList<Reservation>>
+            {
+                GetArrivalsForDate(date),
+                GetDeparturesForDate(date)
+            };
+        }
+
+        // This function constitutes the CRUD portion of Report 2: Selection of lots left vacant over a given time period. 
+        public IList<Lot> GetVacantLotsOverRange(DateOnly start, DateOnly end)
+        {
+            IList<Lot> lots =  new List<Lot>();
+            using var conn = new SqlConnection(_connectionString);
+
+            var cmd = new SqlCommand(
+                """
+                SELECT DISTINCT l.lotID, l.isOccupied, l.lotType FROM Reservation r
+                INNER JOIN LotReservation lr
+                ON lr.reservationID = r.ReservationID
+                INNER JOIN Lot l
+                ON l.lotID = lr.LotID
+                WHERE CAST(r.startDate AS DATE) > @EndDate OR CAST(r.endDate AS DATE) < @StartDate
+                """
+            );
+            cmd.Parameters.AddWithValue("@StartDate", start);
+            cmd.Parameters.AddWithValue("@EndDate", end);
+            
+            conn.Open();
+            
+            using SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                lots.Add(new Lot
+                {
+                    LotId = reader.GetInt32(0),
+                    IsOccupied = reader.GetBoolean(1),
+                    LotType = reader.GetInt32(2),
+                });
+            }
+
+            return lots;
+        }
+
 
     }
+    
 }
