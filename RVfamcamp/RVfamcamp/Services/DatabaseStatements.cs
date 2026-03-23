@@ -183,6 +183,44 @@ namespace RVfamcamp.Services
             return null;
         }
 
+        // **********************************************************
+        // *************** Get User Reservations here ***************
+        // **********************************************************
+
+        /// <summary>
+        /// Gets all reservations for a user
+        /// </summary>
+        /// <param name="userAccountId"></param>
+        /// <returns>List of reservations</returns>
+        public List<Reservation> GetUsersReservations(int userAccountId)
+        {
+            var reservations = new List<Reservation>();
+
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand(
+                @"SELECT reservationId, startDate, endDate, confirmationNumber 
+          FROM Reservations 
+          WHERE userAccountID = @UserAccountID", conn);
+
+            cmd.Parameters.AddWithValue("@UserAccountID", userAccountId);
+
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                reservations.Add(new Reservation
+                {
+                    reservationId = reader.GetInt32(0),
+                    startDate = reader.GetDateTime(1),
+                    endDate = reader.GetDateTime(2),
+                    confirmationNumber = reader.GetInt32(3)
+                });
+            }
+
+            return reservations;
+        }
+
     }
     
 }
