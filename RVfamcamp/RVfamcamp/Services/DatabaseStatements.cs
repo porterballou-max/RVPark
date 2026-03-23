@@ -33,7 +33,7 @@ namespace RVfamcamp.Services
                 users.Add(new UserAccount
                 {
                     UserAccountId = reader.GetInt32(0),
-                    Email = reader.GetString(2),
+                    Email = reader.GetString(1),
                 });
             }
 
