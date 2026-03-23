@@ -17,18 +17,22 @@
             </div>
 		}
         <div class="mb-3">
-            <label>Email</label>
-            <input type="email" class="form-control" placeholder="Enter email" required />
+            <label asp-for="Input.Email" class="form-label">Email</label>
+            <input asp-for="Input.Email" type="email" class="form-control" placeholder="Enter email" required autofocus />
+            <span asp-validation-for="Input.Email" class="text-danger"></span>
         </div>
 
         <div class="mb-3">
-            <label>Password</label>
-            <input type="password" class="form-control" placeholder="Enter password" required />
+            <label asp-for="Input.Password" class="form-label">Password</label>
+            <input asp-for="Input.Password" type="password" class="form-control" placeholder="Enter password" required />
+            <span asp-validation-for="Input.Password" class="text-danger"></span>
         </div>
 
         <div class="mb-3 form-check">
-            <input type="checkbox" class="form-check-input" />
-            <label class="form-check-label">Remember me</label>
+            <input class="form-check-input" type="checkbox" asp-for="Input.RememberMe" id="Input_RememberMe" />
+            <label class="form-check-label" asp-for="Input.RememberMe">
+                Remember me
+            </label>
         </div>
 
         <button id="loginButton" type="submit" class="btn btn-primary w-100 ">
@@ -38,3 +42,7 @@
     </form>
 
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
