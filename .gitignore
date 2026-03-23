@@ -60,6 +60,10 @@ coverage/
 *.tmp
 *.temp
 
+# Database files
+
+*.mdf
+*.ldf
 # Screenshots (only for turning in assignments)
 
 screenshots/
