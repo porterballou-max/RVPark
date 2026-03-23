@@ -27,7 +27,7 @@ public class ReservationsIndexModel : PageModel
             }
         }
 
-    }
+    } 
 }
 
 // Reservations class
