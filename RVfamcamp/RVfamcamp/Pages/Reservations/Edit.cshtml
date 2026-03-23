@@ -6,28 +6,24 @@
 
 <h2>Edit Reservation</h2>
 
+<!--TODO: Enable crud for edits to reservation here-->
 <form method="post">
 
-    <input type="hidden" asp-for="Reservation.Id" />
+    <input type="hidden" asp-for="Reservation.reservationId" />
 
     <div class="mb-3">
-        <label class="form-label">Site Number</label>
-        <input asp-for="Reservation.SiteNumber" class="form-control" />
+        <label class="form-label">Start Date</label>
+        <input asp-for="Reservation.startDate" type="date" class="form-control" />
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Check-In</label>
-        <input asp-for="Reservation.CheckIn" type="date" class="form-control" />
+        <label class="form-label">End Date</label>
+        <input asp-for="Reservation.endDate" type="date" class="form-control" />
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Check-Out</label>
-        <input asp-for="Reservation.CheckOut" type="date" class="form-control" />
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Guests</label>
-        <input asp-for="Reservation.GuestCount" class="form-control" />
+        <label class="form-label">Confirmation Number</label>
+        <input asp-for="Reservation.confirmationNumber" class="form-control" />
     </div>
 
     <button type="submit" class="btn btn-success">Save Changes</button>
