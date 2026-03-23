@@ -2,10 +2,6 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using System;
 using System.Collections.Generic;
 using RVfamcamp.Models;
-using RVfamcamp.
-
-
-
 using RVfamcamp.Services;
 using System.Linq.Expressions;
 using System.Security.Claims;
@@ -17,7 +13,7 @@ public class ReservationsIndexModel : PageModel
 
     public void OnGet()
     {
-        Reservations = new List<Reservation>;
+        Reservations = new List<Reservation>();
 
         // Ensure there is a user logged in
         if (User.Identity.Name != null)
