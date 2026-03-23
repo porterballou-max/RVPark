@@ -13,15 +13,6 @@ public class EditModel : PageModel
         // TODO: Replace with DB lookup
         Reservation = new Reservation
         {
-            ReservationId = id,
-            // SiteNumber = "A12",
-            StartDate = DateTime.Today,
-            EndDate = DateTime.Today.AddDays(3),
-            ConfirmationNumber = 0,
-            UserAccountId = 0
-            // GuestCount = 2,
-            // TotalCost = 150,
-            // Status = "Confirmed"
         };
     }
 

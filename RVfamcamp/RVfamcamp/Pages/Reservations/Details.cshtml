@@ -7,14 +7,11 @@
 <h2>Reservation Details</h2>
 
 <div class="card p-3">
-
-    <p><strong>Id:</strong> @Model.Reservation.ReservationId</p>
-    <p><strong>Start Date:</strong> @Model.Reservation.StartDate.ToShortDateString()</p>
-    <p><strong>End Date:</strong> @Model.Reservation.EndDate.ToShortDateString()</p>
-    <p><strong>Confirmation Number:</strong> @Model.Reservation.ConfirmationNumber</p>
-    <p><strong>User Account Id:</strong> $@Model.Reservation.UserAccountId</p>
+    <p><strong>Check-In:</strong> @Model.Reservation.startDate.ToShortDateString()</p>
+    <p><strong>Check-Out:</strong> @Model.Reservation.endDate.ToShortDateString()</p>
+    <p><strong>Guests:</strong> @Model.Reservation.confirmationNumber>
 
 </div>
 
-<a asp-page="Edit" asp-route-id="@Model.Reservation.ReservationId" class="btn btn-success mt-3">Edit</a>
+<a asp-page="Edit" asp-route-id="@Model.Reservation.reservationId" class="btn btn-success mt-3">Edit</a>
 <a asp-page="Index" class="btn btn-secondary mt-3">Back</a>

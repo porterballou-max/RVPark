@@ -2,48 +2,55 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using System;
 using System.Collections.Generic;
 using RVfamcamp.Models;
+using RVfamcamp.Services;
+using System.Linq.Expressions;
+using System.Security.Claims;
 
 public class ReservationsIndexModel : PageModel
 {
     public List<Reservation> Reservations { get; set; }
+    private DatabaseStatements statements;
 
     public void OnGet()
     {
-        // Temporary mock data
-        // Reservations = new List<Reservation>
-        // {
-        //     new Reservation
-        //     {
-        //         Id = 1,
-        //         SiteNumber = "A12",
-        //         CheckIn = DateTime.Today,
-        //         CheckOut = DateTime.Today.AddDays(3),
-        //         GuestCount = 2,
-        //         TotalCost = 150.00,
-        //         Status = "Confirmed"
-        //     },
-        //     new Reservation
-        //     {
-        //         Id = 2,
-        //         SiteNumber = "B07",
-        //         CheckIn = DateTime.Today.AddDays(5),
-        //         CheckOut = DateTime.Today.AddDays(7),
-        //         GuestCount = 4,
-        //         TotalCost = 220.00,
-        //         Status = "Pending"
-        //     }
-        // };
-    }
+        Reservations = new List<Reservation>();
+        string? email = User.FindFirst(ClaimTypes.Email)?.Value;
+
+        // Ensure there is a user logged in
+        if (email != null)
+        {
+            var userID = statements.GetUserAccountID(email);
+
+            // Ensure there is a userAccount tied to username
+            if (userID != -1)
+            {
+                Reservations = statements.GetUsersReservations(userID);
+            }
+        }
+        else
+        {
+            Reservations.Add
+            (
+                new Reservation
+                {
+                    reservationId = 1,
+                    startDate = DateTime.Today,
+                    endDate = DateTime.Today.AddDays(3),
+                    confirmationNumber = 101
+                }
+            );
+        }
+    } 
 }
 
-// /* Simple model (replace later with your actual model) */
-// public class Reservation
-// {
-//     public int Id { get; set; }
-//     public string SiteNumber { get; set; }
-//     public DateTime CheckIn { get; set; }
-//     public DateTime CheckOut { get; set; }
-//     public int GuestCount { get; set; }
-//     public double TotalCost { get; set; }
-//     public string Status { get; set; }
-// }
+// Reservations class
+public class Reservation
+{
+    public int reservationId { get; set; }
+    public DateTime startDate { get; set; }
+    public DateTime endDate { get; set; }
+    public int confirmationNumber { get; set; }
+
+}
+
+// 
