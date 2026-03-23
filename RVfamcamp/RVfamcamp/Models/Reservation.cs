@@ -1,6 +1,6 @@
-﻿using System;
+﻿namespace RVfamcamp.Models;
 
-namespace RVfamcamp.Models
+public class Reservation
 {
     public class Reservation
     {
