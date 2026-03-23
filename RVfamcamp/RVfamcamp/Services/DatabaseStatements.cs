@@ -49,7 +49,7 @@ namespace RVfamcamp.Services
         {
             using var conn = new SqlConnection(_connectionString);
 
-            var cmd = new SqlCommand("SELECT userAccountID FROM UserAccount WHERE emailAddress = @Email");
+            var cmd = new SqlCommand("SELECT userAccountID FROM UserAccount WHERE emailAddress = @Email", conn);
 
             cmd.Parameters.AddWithValue("@Email", email);
 
