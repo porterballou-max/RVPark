@@ -14,11 +14,12 @@ public class ReservationsIndexModel : PageModel
     public void OnGet()
     {
         Reservations = new List<Reservation>();
+        string? email = User.FindFirst(ClaimTypes.Email)?.Value;
 
         // Ensure there is a user logged in
-        if (User.Identity.Name != null)
+        if (email != null)
         {
-            var userID = statements.GetUserID(User.Identity.Name);
+            var userID = statements.GetUserAccountID(email);
 
             // Ensure there is a userAccount tied to username
             if (userID != -1)
