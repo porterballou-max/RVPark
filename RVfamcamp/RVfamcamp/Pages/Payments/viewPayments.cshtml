@@ -1,0 +1,30 @@
+﻿@page
+@model RVfamcamp.Pages.Payments.ViewPaymentsModel
+@{
+    ViewData["Title"] = "Payments";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="container">
+    <div class="col-12">
+
+        @foreach (var payment in Model.payments)
+        {
+            <div class="row border rounded p-3 mb-3">
+
+                <div class="col-12 fw-bold">
+                    @payment.paymentDate.ToString("yyyy-MM-dd HH:mm")
+                    -
+                    $@payment.total.ToString("0.00")
+                </div>
+
+                <div class="col-12 text-muted">
+                    @payment.summary
+                </div>
+
+            </div>
+        }
+
+    </div>
+</div>

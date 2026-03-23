@@ -63,6 +63,8 @@ namespace RVfamcamp.Services
         /// <summary>
         /// Registers a user into the database
         /// </summary>
+        /// </summary> 
+        /// <param name="username"></param>
         /// <param name="email"></param>
         /// <param name="password"></param>
         /// <param name="firstName"></param>
@@ -129,7 +131,6 @@ namespace RVfamcamp.Services
             cmd.ExecuteNonQuery();
         }
 
-
         // *************************************************
         // *************** Login Adding here ***************
         // *************************************************
@@ -181,7 +182,6 @@ namespace RVfamcamp.Services
 
             return null;
         }
-
 
     }
 }

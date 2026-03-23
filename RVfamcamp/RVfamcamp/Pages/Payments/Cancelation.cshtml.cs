@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace RVfamcamp.Pages
+namespace RVfamcamp.Pages.Payments
 {
-    public class PaymentsModel : PageModel
+    public class CancelationModel : PageModel
     {
         public void OnGet()
         {

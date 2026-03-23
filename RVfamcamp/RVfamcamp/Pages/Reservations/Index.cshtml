@@ -13,12 +13,10 @@
 
     <thead class="table-dark">
         <tr>
-            <th>Site</th>
-            <th>Check-In</th>
-            <th>Check-Out</th>
-            <th>Guests</th>
-            <th>Total</th>
-            <th>Status</th>
+          
+            <th>startDate</th>
+            <th>endDate</th>
+            <th>confirmationNumber</th>
             <th></th>
         </tr>
     </thead>
@@ -29,16 +27,13 @@
             foreach (var r in Model.Reservations)
             {
                 <tr>
-                    <td>@r.SiteNumber</td>
-                    <td>@r.CheckIn.ToShortDateString()</td>
-                    <td>@r.CheckOut.ToShortDateString()</td>
-                    <td>@r.GuestCount</td>
-                    <td>$@r.TotalCost</td>
-                    <td>@r.Status</td>
+                    <td>@r.startDate.ToShortDateString()</td>
+                    <td>@r.endDate.ToShortDateString()</td>
+                    <td>@r.confirmationNumber</td>
                     <td>
-                        <a class="btn btn-sm btn-outline-primary" asp-page="/Reservations/Details" asp-route-id="@r.Id">View</a>
-                        <a class="btn btn-sm btn-outline-secondary" asp-page="/Reservations/Edit" asp-route-id="@r.Id">Edit</a>
-                        <a class="btn btn-sm btn-outline-danger" asp-page="/Reservations/Delete" asp-route-id="@r.Id">Delete</a>
+                        <a class="btn btn-sm btn-outline-primary" asp-page="/Reservations/Details" asp-route-id="@r.reservationId">View</a>
+                        <a class="btn btn-sm btn-outline-secondary" asp-page="/Reservations/Edit" asp-route-id="@r.reservationId">Edit</a>
+                        <a class="btn btn-sm btn-outline-danger" asp-page="/Reservations/Delete" asp-route-id="@r.reservationId">Delete</a>
                     </td>
                 </tr>
             }
