@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using RVfamcamp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +20,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.AccessDeniedPath = "/Login";     // Where to redirect user if cookie fails (i.e. password changed)
         options.ReturnUrlParameter = "ReturnUrl";
     });
-    
+
+// Add SQL statements to whole project
+builder.Services.AddScoped<DatabaseStatements>();
+
 
 // For database
 AppDomain.CurrentDomain.SetData("DataDirectory", Directory.GetCurrentDirectory());
