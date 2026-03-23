@@ -1,59 +1,60 @@
 ﻿@page
-@model RVPark.Pages.Account.RegisterModel
+@model RVfamcamp.Pages.Account.RegisterModel
 @{
     ViewData["Title"] = "Create Account";
 }
 
 <div class="app-container">
     <div class="main-content">
-        <div class="profile-container card p-4 shadow-sm">
+        <div class="profile-container card p-4 shadow-sm mx-auto" style="max-width: 400px;">
 
-            <h3 class="text-center mb-3">Create Account</h3>
+            <h3 class="text-center mb-4">Create Account</h3>
 
-            <form method="post">
-
-                <div class="form-group mb-3">
-                    <label asp-for="Input.FirstName"></label>
+            <form method="post" novalidate>
+                <div class="mb-3">
+                    <label asp-for="Input.FirstName" class="form-label"></label>
                     <input asp-for="Input.FirstName" class="form-control" />
                     <span asp-validation-for="Input.FirstName" class="text-danger"></span>
                 </div>
 
-                <div class="form-group mb-3">
-                    <label asp-for="Input.LastName"></label>
+                <div class="mb-3">
+                    <label asp-for="Input.LastName" class="form-label"></label>
                     <input asp-for="Input.LastName" class="form-control" />
                     <span asp-validation-for="Input.LastName" class="text-danger"></span>
                 </div>
 
-                <div class="form-group mb-3">
-                    <label asp-for="Input.Email"></label>
+                <div class="mb-3">
+                    <label asp-for="Input.Email" class="form-label"></label>
                     <input asp-for="Input.Email" class="form-control" />
                     <span asp-validation-for="Input.Email" class="text-danger"></span>
                 </div>
-               
 
-                <div class="form-group mb-3">
-                    <label asp-for="Input.Password"></label>
-                    <input asp-for="Input.Password" class="form-control" />
+                <div class="mb-3">
+                    <label asp-for="Input.Password" class="form-label"></label>
+                    <input asp-for="Input.Password" class="form-control" type="password" />
                     <span asp-validation-for="Input.Password" class="text-danger"></span>
                 </div>
 
-                <div class="form-group mb-4">
-                    <label asp-for="Input.ConfirmPassword"></label>
-                    <input asp-for="Input.ConfirmPassword" class="form-control" />
+                <div class="mb-4">
+                    <label asp-for="Input.ConfirmPassword" class="form-label"></label>
+                    <input asp-for="Input.ConfirmPassword" class="form-control" type="password" />
                     <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
                 </div>
 
-                <button type="submit" class="btn btn-success w-100">
+                <button type="submit" class="btn btn-success w-100 mb-3">
                     Create Account
                 </button>
 
-                <p class="mt-3 text-center">
+                <p class="text-center">
                     Already have an account?
                     <a asp-page="/Login">Login</a>
                 </p>
-
             </form>
 
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
