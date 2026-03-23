@@ -23,7 +23,7 @@ namespace RVfamcamp.Services
 
             using var conn = new SqlConnection(_connectionString);
 
-            var cmd = new SqlCommand("SELECT userAccountID, username, emailAddress FROM UserAccount", conn);
+            var cmd = new SqlCommand("SELECT userAccountID, emailAddress FROM UserAccount", conn);
 
             conn.Open();
             using SqlDataReader reader = cmd.ExecuteReader();
@@ -33,12 +33,30 @@ namespace RVfamcamp.Services
                 users.Add(new UserAccount
                 {
                     UserAccountId = reader.GetInt32(0),
-                    Username = reader.GetString(1),
                     Email = reader.GetString(2),
                 });
             }
 
             return users;
+        }
+
+        /// <summary>
+        /// Gets userAccountID from emailAddress
+        /// </summary>
+        /// <param name="emailAddress"></param>
+        /// <returns></returns>
+        public int GetUserAccountID(string email)
+        {
+            using var conn = new SqlConnection(_connectionString);
+
+            var cmd = new SqlCommand("SELECT userAccountID FROM UserAccount WHERE emailAddress = @Email");
+
+            cmd.Parameters.AddWithValue("@Email", email);
+
+            conn.Open();
+            var userID = cmd.ExecuteScalar();
+
+            return Convert.ToInt32(userID);
         }
 
         /// <summary>
@@ -54,14 +72,13 @@ namespace RVfamcamp.Services
         {
             var hasher = new PasswordHasher<UserAccount>();
 
-            var dummyUser = new UserAccount { Username = username };
+            var dummyUser = new UserAccount { Email = email };
 
             string secureHash = hasher.HashPassword(dummyUser, password);
 
             using var conn = new SqlConnection(_connectionString);
-            var cmd = new SqlCommand("INSERT INTO UserAccount (username, emailAddress, password, firstName, lastName, role) VALUES (@User, @Email, @Hash, @FirstName, @LastName, @Role)", conn);
+            var cmd = new SqlCommand("INSERT INTO UserAccount (emailAddress, password, firstName, lastName, role) VALUES (@User, @Email, @Hash, @FirstName, @LastName, @Role)", conn);
 
-            cmd.Parameters.AddWithValue("@User", username);
             cmd.Parameters.AddWithValue("@Email", email);
             cmd.Parameters.AddWithValue("@Hash", secureHash);
             cmd.Parameters.AddWithValue("@FirstName", firstName);
@@ -80,12 +97,11 @@ namespace RVfamcamp.Services
         /// <param name="username"></param>
         /// <param name="firstName"></param>
         /// <param name="lastName"></param>
-        public void UpdateUser(int userId, string email, string username, string firstName, string lastName)
+        public void UpdateUser(int userId, string email, string firstName, string lastName)
         {
             using var conn = new SqlConnection(_connectionString);
-            var cmd = new SqlCommand("UPDATE UserAccount SET emailAddress = @Email, username = @Username, firstName = @FirstName, lastName = @LastName WHERE userAccountID = @UserAccountID", conn);
+            var cmd = new SqlCommand("UPDATE UserAccount SET emailAddress = @Email, firstName = @FirstName, lastName = @LastName WHERE userAccountID = @UserAccountID", conn);
             cmd.Parameters.AddWithValue("@Email", email);
-            cmd.Parameters.AddWithValue("@Username", username);
             cmd.Parameters.AddWithValue("@FirstName", firstName);
             cmd.Parameters.AddWithValue("@LastName", lastName);
             cmd.Parameters.AddWithValue("@UserAccountID", userId);
