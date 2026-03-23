@@ -43,7 +43,7 @@ namespace RVfamcamp.Services
 
         /// <summary>
         /// Registers a user into the database
-        /// </summary>
+        /// </summary> 
         /// <param name="username"></param>
         /// <param name="email"></param>
         /// <param name="password"></param>
@@ -108,6 +108,63 @@ namespace RVfamcamp.Services
             cmd.ExecuteNonQuery();
         }
 
+        /// <summary>
+        /// Gets userID by username
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns>userId</returns>
+        public int GetUserID(string username)
+        {
+            using var conn = new SqlConnection(_connectionString);
+
+            var cmd = new SqlCommand("SELECT userAccountID FROM UserAccount WHERE username = @Username", conn);
+
+            cmd.Parameters.AddWithValue("@Username", username);
+
+            conn.Open();
+            var result = cmd.ExecuteScalar();
+
+            if (result != null)
+            {
+                return Convert.ToInt32(result);
+            }
+            else
+            {
+                return -1;
+            }
+            
+        }
+
+        /// <summary>
+        /// Gets a list of all reservations for a user
+        /// </summary>
+        /// <returns>list of reservations</returns>
+        public List<Reservation> GetUsersReservations(int userAccountID)
+        {
+            var reservations = new List<Reservation>();
+
+            using var conn = new SqlConnection(_connectionString);
+             
+            var cmd = new SqlCommand("SELECT reservationID, startDate, endDate, " +
+                "confirmationNumber FROM Reservation WHERE userAccountID = @UserAccountID", conn);
+            cmd.Parameters.AddWithValue("@UserAccountID", userAccountID);
+
+            conn.Open();
+            using SqlDataReader reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                reservations.Add(new Reservation
+                {
+                    reservationId = reader.GetInt32(0),
+                    startDate = reader.GetDateTime(1),
+                    endDate = reader.GetDateTime(2),
+                    confirmationNumber = reader.GetInt32(3)
+                });
+            }
+
+            return reservations;
+        }
 
     }
 }
