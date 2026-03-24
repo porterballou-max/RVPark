@@ -8,39 +8,63 @@
     <div class="main-content">
         <div class="profile-container card p-4 shadow-sm">
             <h2>@ViewData["Title"]</h2>
+
             <form method="post">
-                <div class="form-group">
-                    <label asp-for="Profile.FirstName"></label>
-                    <input asp-for="Profile.FirstName" class="form-control" />
-                    <span asp-validation-for="Profile.FirstName" class="text-danger"></span>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="Input.FirstName" class="form-label">First Name</label>
+                            <input asp-for="Input.FirstName" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="Input.LastName" class="form-label">Last Name</label>
+                            <input asp-for="Input.LastName" class="form-control" />
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label asp-for="Profile.LastName"></label>
-                    <input asp-for="Profile.LastName" class="form-control" />
-                    <span asp-validation-for="Profile.LastName" class="text-danger"></span>
+                <div class="form-group mb-3">
+                    <label asp-for="Input.Email" class="form-label">Email</label>
+                    <input asp-for="Input.Email" type="email" class="form-control" />
                 </div>
 
-                <div class="form-group">
-                    <label asp-for="Profile.Email"></label>
-                    <input asp-for="Profile.Email" class="form-control" />
-                    <span asp-validation-for="Profile.Email" class="text-danger"></span>
-                </div>
+                <!-- Billing Section - Only show if user has a Client record -->
+                @if (Model.HasClientRecord)
+                {
+                    <h5 class="mt-4 mb-3">Billing Information</h5>
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label asp-for="Input.MilitaryAffiliation" class="form-label">Military Affiliation</label>
+                            <input asp-for="Input.MilitaryAffiliation" class="form-control" />
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label asp-for="Input.BillingStreet" class="form-label">Street Address</label>
+                            <input asp-for="Input.BillingStreet" class="form-control" />
+                        </div>
+                        <div class="col-md-5 mb-3">
+                            <label asp-for="Input.BillingCity" class="form-label">City</label>
+                            <input asp-for="Input.BillingCity" class="form-control" />
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label asp-for="Input.BillingState" class="form-label">State</label>
+                            <input asp-for="Input.BillingState" class="form-control" maxlength="2" />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label asp-for="Input.BillingZip" class="form-label">ZIP Code</label>
+                            <input asp-for="Input.BillingZip" class="form-control" />
+                        </div>
+                    </div>
+                }
 
-                <div class="form-group">
-                    <label asp-for="Profile.Phone"></label>
-                    <input asp-for="Profile.Phone" class="form-control" />
-                    <span asp-validation-for="Profile.Phone" class="text-danger"></span>
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-success me-2"
+                            onclick="return confirm('Are you sure you want to save these changes?');">
+                        Save Changes
+                    </button>
+                    <a asp-page="./Index" class="btn btn-secondary">Cancel</a>
                 </div>
-
-                <div class="form-group">
-                    <label asp-for="Profile.DateOfBirth"></label>
-                    <input asp-for="Profile.DateOfBirth" type="date" class="form-control" />
-                    <span asp-validation-for="Profile.DateOfBirth" class="text-danger"></span>
-                </div>
-
-                <button type="submit" class="btn btn-success">Save Changes</button>
-                <a asp-page="./Index" class="btn btn-secondary">Cancel</a>
             </form>
         </div>
     </div>

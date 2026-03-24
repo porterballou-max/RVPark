@@ -95,6 +95,37 @@ namespace RVfamcamp.Services
         }
 
         /// <summary>
+        /// Gets basic user profile information by userAccountID
+        /// </summary>
+        public UserAccount? GetUserById(int userAccountId)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand(
+                @"SELECT userAccountID, emailAddress, firstName, lastName, role 
+          FROM UserAccount 
+          WHERE userAccountID = @UserId", conn);
+
+            cmd.Parameters.AddWithValue("@UserId", userAccountId);
+            conn.Open();
+
+            using var reader = cmd.ExecuteReader();
+
+            if (reader.Read())
+            {
+                return new UserAccount
+                {
+                    UserAccountId = reader.GetInt32(0),
+                    Email = reader.GetString(1),
+                    FirstName = reader.GetString(2),
+                    LastName = reader.GetString(3),
+                    Role = reader.GetString(4)
+                };
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Updates a user from the database
         /// </summary>
         /// <param name="userId"></param>
@@ -397,6 +428,33 @@ namespace RVfamcamp.Services
 
             conn.Open();
             cmd.ExecuteNonQuery();
+        }
+
+        public ClientInfo? GetClientInfo(int userAccountId)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand(
+                @"SELECT militaryAffiliation, billingStreet, billingCity, billingState, billingZip 
+          FROM Client 
+          WHERE userAccountID = @UserId", conn);
+
+            cmd.Parameters.AddWithValue("@UserId", userAccountId);
+            conn.Open();
+
+            using var reader = cmd.ExecuteReader();
+
+            if (reader.Read())
+            {
+                return new ClientInfo
+                {
+                    MilitaryAffiliation = reader.GetString(0),
+                    BillingStreet = reader.GetString(1),
+                    BillingCity = reader.GetString(2),
+                    BillingState = reader.GetString(3),
+                    BillingZip = reader.GetString(4)
+                };
+            }
+            return null;
         }
 
         public void EditClientInfo(int userAccountID, string militaryAffiliation, string street, string city, string state, string zip)

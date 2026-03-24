@@ -24,7 +24,22 @@
 
         <div class="mb-3">
             <label asp-for="Input.Password" class="form-label">Password</label>
-            <input asp-for="Input.Password" type="password" class="form-control" placeholder="Enter password" required />
+    
+            <div class="position-relative">
+                <input asp-for="Input.Password"
+                       type="password"
+                       class="form-control pe-5"
+                       id="passwordField"
+                       placeholder="Enter password"
+                       required />
+        
+                <span class="position-absolute top-50 end-0 translate-middle-y me-3"
+                      style="cursor: pointer; font-size: 1.35rem; color: #6c757d; z-index: 10;"
+                      onclick="togglePassword()">
+                    👁
+                </span>
+            </div>
+
             <span asp-validation-for="Input.Password" class="text-danger"></span>
         </div>
 
@@ -50,4 +65,14 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>        // Make password visible if eyeball clicked
+        function togglePassword() {
+            const field = document.getElementById("passwordField");
+            if (field.type === "password") {
+                field.type = "text";
+            } else {
+                field.type = "password";
+            }
+        }
+    </script>
 }
