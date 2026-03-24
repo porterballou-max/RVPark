@@ -1,7 +1,8 @@
 ﻿using Microsoft.Data.SqlClient;
 using RVfamcamp.Models;
 using Microsoft.AspNetCore.Identity;
-using System.ComponentModel; //for password hash
+using System.ComponentModel;
+using System.Diagnostics;
 
 namespace RVfamcamp.Services
 {
@@ -64,7 +65,6 @@ namespace RVfamcamp.Services
         /// Registers a user into the database
         /// </summary>
         /// </summary> 
-        /// <param name="username"></param>
         /// <param name="email"></param>
         /// <param name="password"></param>
         /// <param name="firstName"></param>
@@ -99,7 +99,6 @@ namespace RVfamcamp.Services
         /// </summary>
         /// <param name="userId"></param>
         /// <param name="email"></param>
-        /// <param name="username"></param>
         /// <param name="firstName"></param>
         /// <param name="lastName"></param>
         public void UpdateUser(int userId, string email, string firstName, string lastName)
@@ -124,7 +123,7 @@ namespace RVfamcamp.Services
         public void DeleteUser(int userId)
         {
             using var conn = new SqlConnection(_connectionString);
-            var cmd = new SqlCommand("DELETE FROM UserAccount WHERE emailAddress = @UserAccountID", conn);
+            var cmd = new SqlCommand("DELETE FROM UserAccount WHERE userAccountID = @UserAccountID", conn);
             cmd.Parameters.AddWithValue("@UserID", userId);
 
             conn.Open();
@@ -181,6 +180,381 @@ namespace RVfamcamp.Services
             }
 
             return null;
+        }
+        
+        // CREATE: Reservations
+        public void AddReservation(Reservation reservation)
+        {
+            
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand(
+                """
+                    INSERT INTO Reservation (StartDate, EndDate, ConfirmationNumber)
+                    VALUES (@startDate, @endDate, @confirmationNumber)
+                """);
+            cmd.Parameters.AddWithValue("@startDate", reservation.startDate);
+            cmd.Parameters.AddWithValue("@endDate", reservation.endDate);
+            cmd.Parameters.AddWithValue("@confirmationNumber", reservation.confirmationNumber);
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+        
+        // READ: Reservations
+        public List<Reservation> GetAllReservations()
+        {
+            var reservations = new List<Reservation>();
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("SELECT ReservationID, StartDate, EndDate, ConfirmationNumber FROM Reservation", conn); 
+            conn.Open();
+            using SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                reservations.Add(
+                    
+                    new Reservation
+                    {
+                        reservationId = reader.GetInt32(0),
+                    }
+                    
+                );
+            }
+            return reservations;
+        }
+        
+        // READ: Reservations
+        public Reservation GetReservationById(int reservationId)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("SELECT ReservationID, StartDate, EndDate, ConfirmationNumber FROM Reservation WHERE ReservationID = @reservationId", conn);
+            cmd.Parameters.AddWithValue("@reservationId", reservationId);
+            conn.Open();
+            using SqlDataReader reader = cmd.ExecuteReader();
+            if (!reader.HasRows)
+            {
+                return null; 
+            }
+            else
+            {
+                return new Reservation
+                {
+                    reservationId = reader.GetInt32(0),
+                    startDate = reader.GetDateTime(1),
+                    endDate = reader.GetDateTime(2),
+                    confirmationNumber = reader.GetInt32(3)
+                };
+            }
+        }
+        
+        // DELETE: Reservation 
+        public void RemoveReservationById(Reservation reservation)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            
+            // Delete entry in vehicle reservation if it exists. 
+            var cmdDelVehicleRegistration =
+                new SqlCommand("DELETE FROM VehicleReservation vr WHERE vr.reservationID == @reservationId");
+            cmdDelVehicleRegistration.Parameters.AddWithValue("@reservationId", reservation.reservationId);
+            conn.Open();
+            cmdDelVehicleRegistration.ExecuteNonQuery();
+            conn.Close();
+            
+            // Delete reservation. 
+            var cmd = new SqlCommand("DELETE FROM Reservation WHERE ReservationID = @reservationID", conn);
+            cmd.Parameters.AddWithValue("@reservationID", reservation.reservationId);
+            conn.Open();
+            cmd.ExecuteNonQuery();
+            conn.Close();
+        }
+
+        // Retrieves all Reservation objects whose 'startDate' column corresponds to the given date. 
+        // Note that time is not considered in this query. So, if two DateTime columns are identical in Date but not in Time, that does not matter to this function. 
+        private IList<Reservation> GetArrivalsForDate(DateOnly date)
+        {
+            IList<Reservation> reservations = new List<Reservation>();
+            using var conn = new SqlConnection(_connectionString);
+
+            var cmd = new SqlCommand(
+                """
+                SELECT ReservationID, StartDate, EndDate, ConfirmationNumber FROM Reservation
+                WHERE CAST(startDate AS DATE) = @ArrivalDate
+                """
+            );
+            cmd.Parameters.AddWithValue("@ArrivalDate", date);            
+            
+            conn.Open();
+            
+            using SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                reservations.Add(
+                    new Reservation
+                    {
+                        reservationId = reader.GetInt32(0),
+                        startDate = reader.GetDateTime(1),
+                        endDate = reader.GetDateTime(2),
+                        confirmationNumber = reader.GetInt32(3)
+                    }
+                );
+            }
+
+            return reservations;
+        }
+
+        // Returns all Reservations whose 'endDate' column corresponds to the given date column. 
+        // Note that time is not considered in this query. So, if two DateTime columns are identical in Date but not in Time, that does not matter to this function.
+        private IList<Reservation> GetDeparturesForDate(DateOnly date)
+        {
+            IList<Reservation> reservations = new List<Reservation>();
+            using var conn = new SqlConnection(_connectionString);
+
+            var cmd = new SqlCommand(
+                """
+                SELECT ReservationID, StartDate, EndDate, ConfirmationNumber FROM Reservation
+                WHERE CAST(endDate AS DATE) = @DepartureDate
+                """
+            );
+            cmd.Parameters.AddWithValue("@DepartureDate", date);            
+            
+            conn.Open();
+            
+            using SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                reservations.Add(
+                    new Reservation
+                    {
+                        reservationId = reader.GetInt32(0),
+                        startDate = reader.GetDateTime(1),
+                        endDate = reader.GetDateTime(2),
+                        confirmationNumber = reader.GetInt32(3)
+                    }
+                );
+            }
+
+            return reservations;
+        }
+
+        // A QoL function that allows you to retrieve arrivals and departures through a single function call. 
+        // This function fulfills the CRUD requirements for Report 1: Selection of arrivals and departures for a given date. 
+        public IList<IList<Reservation>> GetArrivalsAndDeparturesForDate(DateOnly date)
+        {
+            return new List<IList<Reservation>>
+            {
+                GetArrivalsForDate(date),
+                GetDeparturesForDate(date)
+            };
+        }
+
+        // This function constitutes the CRUD portion of Report 2: Selection of lots left vacant over a given time period. 
+        public IList<Lot> GetVacantLotsOverRange(DateOnly start, DateOnly end)
+        {
+            IList<Lot> lots =  new List<Lot>();
+            using var conn = new SqlConnection(_connectionString);
+
+            var cmd = new SqlCommand(
+                """
+                SELECT DISTINCT l.lotID, l.isOccupied, l.lotType FROM Reservation r
+                INNER JOIN LotReservation lr
+                ON lr.reservationID = r.ReservationID
+                INNER JOIN Lot l
+                ON l.lotID = lr.LotID
+                WHERE CAST(r.startDate AS DATE) > @endDate OR CAST(r.endDate AS DATE) < @startDate
+                """
+            );
+            cmd.Parameters.AddWithValue("@startDate", start);
+            cmd.Parameters.AddWithValue("@endDate", end);
+            
+            conn.Open();
+            
+            using SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                lots.Add(new Lot
+                {
+                    LotId = reader.GetInt32(0),
+                    IsOccupied = reader.GetBoolean(1),
+                    LotType = reader.GetInt32(2),
+                });
+            }
+
+            return lots;
+        }
+
+        // *****************
+        // Client Table
+        // *****************
+        public void AddClientInfo(int userAccountID, string militaryAffiliation, string street, string city, string state, string zip)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("INSERT INTO Client (userAccountID, militaryAffiliation, billingStreet, billingCity, billingState, billingZip) VALUES (@UserAccountID, @MilitaryAffiliation, @Street, @City, @State, @Zip)", conn);
+
+            cmd.Parameters.AddWithValue("@UserAccountID", userAccountID);
+            cmd.Parameters.AddWithValue("@MilitaryAffiliation", militaryAffiliation);
+            cmd.Parameters.AddWithValue("@Street", street);
+            cmd.Parameters.AddWithValue("@City", city);
+            cmd.Parameters.AddWithValue("@State", state);
+            cmd.Parameters.AddWithValue("@Zip", zip);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public void EditClientInfo(int userAccountID, string militaryAffiliation, string street, string city, string state, string zip)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("UPDATE Client SET militaryAffiliation = @MilitaryAffiliation, billingStreet = @Street, billingCity = @City, billingState = @State, billingZip = @Zip WHERE userAccountID = @UserAccountID", conn);
+
+            cmd.Parameters.AddWithValue("@UserAccountID", userAccountID);
+            cmd.Parameters.AddWithValue("@MilitaryAffiliation", militaryAffiliation);
+            cmd.Parameters.AddWithValue("@Street", street);
+            cmd.Parameters.AddWithValue("@City", city);
+            cmd.Parameters.AddWithValue("@State", state);
+            cmd.Parameters.AddWithValue("@Zip", zip);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public void DeleteClientInfo(int userAccountID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("DELETE FROM Client WHERE userAccountID = @UserAccountID", conn);
+            cmd.Parameters.AddWithValue("@UserAccountID", userAccountID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+
+        // *****************
+        // Vehicle Table
+        // *****************
+        public void AddVehicle(string licenseNumber, int year, string make, string model, string userAccountID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("INSERT INTO Vehicle (licenseNumber, year, make, model, userAccountID) VALUES (@LicenseNumber, @Year, @Make, @Model, @UserAccountID)", conn);
+
+            cmd.Parameters.AddWithValue("@licenseNumber", licenseNumber);
+            cmd.Parameters.AddWithValue("@Year", year);
+            cmd.Parameters.AddWithValue("@Make", make);
+            cmd.Parameters.AddWithValue("@Model", model);
+            cmd.Parameters.AddWithValue("@UserAccountID", userAccountID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public void EditVehicle(string licenseNumber, int year, string make, string model, string userAccountID, int vehicleID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("UPDATE Vehicle SET licenseNumber = @LicenseNumber, year = @Year, make = @Make, model = @Model, userAccountID = @UserAccountID WHERE vehicleID = @VehicleID", conn);
+
+            cmd.Parameters.AddWithValue("@licenseNumber", licenseNumber);
+            cmd.Parameters.AddWithValue("@Year", year);
+            cmd.Parameters.AddWithValue("@Make", make);
+            cmd.Parameters.AddWithValue("@Model", model);
+            cmd.Parameters.AddWithValue("@UserAccountID", userAccountID);
+            cmd.Parameters.AddWithValue("@VehicleID", vehicleID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public void DeleteVehicle(int vehicleID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("DELETE FROM Vehicle WHERE vehicleID = @VehicleID", conn);
+            cmd.Parameters.AddWithValue("@UserAccountID", vehicleID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+
+
+        // *****************
+        // VehicleReservation Table
+        // *****************
+        public void LinkVehicleToReservation(int vehicleID, int reservationID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("INSERT INTO VehicleReservation (vehicleID, reservationID) VALUES (@VehicleID, @ReservationID)", conn);
+
+            cmd.Parameters.AddWithValue("@VehicleID", vehicleID);
+            cmd.Parameters.AddWithValue("@ReservationID", reservationID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public void RemoveAllVehiclesFromReservation(int reservationID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("DELETE FROM VehicleReservation WHERE reservationID = @ReservationID", conn);
+
+            cmd.Parameters.AddWithValue("@ReservationID", reservationID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+
+        // *****************
+        // LotReservation
+        // *****************
+        public void AssignLotToReservation(int lotID, int reservationID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("INSERT INTO LotReservation (lotID, reservationID) VALUES (@LotID, @ReservationID)", conn);
+
+            cmd.Parameters.AddWithValue("@LotID", lotID);
+            cmd.Parameters.AddWithValue("@ReservationID", reservationID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public void ClearLotsFromReservation(int reservationID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("DELETE FROM LotReservation WHERE reservationID = @ReservationID", conn);
+
+            cmd.Parameters.AddWithValue("@ReservationID", reservationID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+
+        // *****************
+        // Lot
+        // *****************
+        public void UpdateLotOccupancy(int lotID, bool isOccupied)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("UPDATE Lot SET isOccupied = @Status WHERE lotID = @LotID", conn);
+
+            cmd.Parameters.AddWithValue("@Status", isOccupied);
+            cmd.Parameters.AddWithValue("@LotID", lotID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        // *****************
+        // Report
+        // *****************
+        public void LogReportGeneration(int userAccountID, string reportType)
+        {
+            using var conn = new SqlConnection(_connectionString);
+
+            var cmd = new SqlCommand("INSERT INTO Report (userAccountID, generatedDate, reportType) VALUES (@UserID, GETDATE(), @Type)", conn);
+
+            cmd.Parameters.AddWithValue("@UserID", userAccountID);
+            cmd.Parameters.AddWithValue("@Type", reportType);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
         }
 
         // **********************************************************
