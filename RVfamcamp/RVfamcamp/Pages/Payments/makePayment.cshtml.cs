@@ -1,17 +1,18 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using RVfamcamp.Services;
+using System.Security.Claims;
 
 namespace RVfamcamp.Pages.Payments
 {
-    public class MakePaymentModel : PageModel
+	public class MakePaymentModel : PageModel
 	{
 
 		private readonly StripeService _stripe;
 
 		public void OnGet()
-        {
-        }
+		{
+		}
 
 		public MakePaymentModel(StripeService stripe)
 		{
@@ -20,9 +21,18 @@ namespace RVfamcamp.Pages.Payments
 
 		public async Task<IActionResult> OnPost()
 		{
-			var url = await _stripe.CreateCheckoutSession(10m, null);
 
-			return Redirect(url);
+			string? userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+			if (int.TryParse(userIdString, out int userId))
+			{
+				var url = await _stripe.CreateCheckoutSession(10m, userId);
+
+				return Redirect(url);
+			} else
+			{
+				return Redirect("/Login/");
+			}
 		}
 	}
 }

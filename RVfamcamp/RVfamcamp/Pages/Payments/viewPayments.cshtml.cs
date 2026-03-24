@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using RVfamcamp.Database;
 using RVfamcamp.Models;
 using RVfamcamp.Services;
+using System.Security.Claims;
 
 namespace RVfamcamp.Pages.Payments
 {
@@ -14,10 +15,16 @@ namespace RVfamcamp.Pages.Payments
 
 		public List<paymentModel> payments { get; set; } = new();
 
+		public IActionResult OnGet()
+		{
+			string? userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+			Console.WriteLine("user id string: " + userIdString);
+			if (!int.TryParse(userIdString, out int userId))
+				return Redirect("/Login");
 
-		public void OnGet()
-        {
-			payments = _paymentRepo.getAllPayments(); // TODO: Hook into authorized user to get payments for the logged in user!
+			payments = _paymentRepo.getAllPaymentsForUser(userId);
+
+			return Page();
 		}
 
 		public ViewPaymentsModel(StripeService stripe, PaymentRepo paymentRepo)

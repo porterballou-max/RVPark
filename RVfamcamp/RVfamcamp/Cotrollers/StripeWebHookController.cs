@@ -75,7 +75,8 @@ namespace RVfamcamp.Controllers
 				// If your DB column/property is decimal dollars, change this line to:
 				// toAdd.total = (session.AmountTotal ?? 0) / 100m;
 				toAdd.total = (session.AmountTotal ?? 0) / 100m;
-
+				if(int.TryParse(session.ClientReferenceId, out int userId))
+					toAdd.userID = userId;
 				toAdd.summary = GeneratePaymentSummary(session);
 				toAdd.paymentDate = session.Created;
 				toAdd.stripeID = session.Id;
