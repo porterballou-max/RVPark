@@ -1,0 +1,37 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using RVfamcamp.Models;
+using RVfamcamp.Services;
+using System.ComponentModel.DataAnnotations;
+
+namespace RVfamcamp.Pages
+{
+    public class ReportsModel : PageModel
+    {
+        private readonly DatabaseStatements _db;
+        public ReportsModel(DatabaseStatements db) => _db = db;
+
+        [BindProperty]
+        [DataType(DataType.Date)]
+        public DateTime StartDate { get; set; } = DateTime.Now;
+
+        [BindProperty]
+        [DataType(DataType.Date)]
+        public DateTime EndDate { get; set; } = DateTime.Now.AddDays(7);
+
+        public bool ShowReports { get; set; } = false;
+
+        public StatusReport? MyStatusReport { get; set; }
+
+        public void OnGet()
+        {
+
+        }
+
+        public void OnPost()
+        {
+            ShowReports = true;
+            MyStatusReport = _db.GetStatusReport(StartDate, EndDate);
+        }
+    }
+}
