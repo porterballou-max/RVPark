@@ -1,8 +1,9 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Data.SqlClient;
 using RVfamcamp.Models;
-using Microsoft.AspNetCore.Identity;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Security.Cryptography;
 
 namespace RVfamcamp.Services
 {
@@ -529,6 +530,19 @@ namespace RVfamcamp.Services
         // *****************
         // Lot
         // *****************
+        public int getLotID(int lotNumber)
+        {
+            using var conn = new SqlConnection(_connectionString);
+
+            var cmd = new SqlCommand("SELECT lotID FROM Lot WHERE lotNumber = @LotNumber", conn);
+
+            cmd.Parameters.AddWithValue("@LotNumber", lotNumber);
+
+            conn.Open();
+            var lotID = cmd.ExecuteScalar();
+
+            return Convert.ToInt32(lotID);
+        }
         public void UpdateLotOccupancy(int lotID, bool isOccupied)
         {
             using var conn = new SqlConnection(_connectionString);
@@ -560,6 +574,20 @@ namespace RVfamcamp.Services
         // *****************
         // Payments
         // *****************
+        public int getPaymentIdByReservation(int reservationID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+
+            var cmd = new SqlCommand("SELECT paymentsID FROM Payments WHERE reservationID = @ReservationID", conn);
+
+            cmd.Parameters.AddWithValue("@ReservationID", reservationID);
+
+            conn.Open();
+            var lotID = cmd.ExecuteScalar();
+
+            return Convert.ToInt32(lotID);
+        }
+
         public void AddPayment(decimal total, decimal tax, string summary, string stripeCode, int reservationID)
         {
             using var conn = new SqlConnection(_connectionString);
