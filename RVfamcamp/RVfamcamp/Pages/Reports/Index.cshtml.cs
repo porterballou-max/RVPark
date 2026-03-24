@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using RVfamcamp.Models;
 using RVfamcamp.Services;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 
 namespace RVfamcamp.Pages
 {
@@ -30,8 +31,22 @@ namespace RVfamcamp.Pages
 
         public void OnPost()
         {
-            ShowReports = true;
-            MyStatusReport = _db.GetStatusReport(StartDate, EndDate);
+            // Find the user ID
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out int loggedInUserID))
+            {
+                ShowReports = true;
+                MyStatusReport = _db.GetStatusReport(StartDate, EndDate);
+
+                string reportTitle = $"Status Report ({StartDate.ToShortDateString()} - {EndDate.ToShortDateString()})";
+
+                _db.LogReportGeneration(loggedInUserID, reportTitle);
+            }
+            //If the claim for the UserID is missing, assume logged out and return to login screen.
+            else
+            {
+                RedirectToPage("/Login");
+            }
         }
     }
 }
