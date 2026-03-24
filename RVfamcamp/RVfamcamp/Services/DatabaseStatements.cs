@@ -123,7 +123,7 @@ namespace RVfamcamp.Services
         public void DeleteUser(int userId)
         {
             using var conn = new SqlConnection(_connectionString);
-            var cmd = new SqlCommand("DELETE FROM UserAccount WHERE emailAddress = @UserAccountID", conn);
+            var cmd = new SqlCommand("DELETE FROM UserAccount WHERE userAccountID = @UserAccountID", conn);
             cmd.Parameters.AddWithValue("@UserID", userId);
 
             conn.Open();
@@ -378,6 +378,183 @@ namespace RVfamcamp.Services
             }
 
             return lots;
+        }
+
+        // *****************
+        // Client Table
+        // *****************
+        public void AddClientInfo(int userAccountID, string militaryAffiliation, string street, string city, string state, string zip)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("INSERT INTO Client (userAccountID, militaryAffiliation, billingStreet, billingCity, billingState, billingZip) VALUES (@UserAccountID, @MilitaryAffiliation, @Street, @City, @State, @Zip)", conn);
+
+            cmd.Parameters.AddWithValue("@UserAccountID", userAccountID);
+            cmd.Parameters.AddWithValue("@MilitaryAffiliation", militaryAffiliation);
+            cmd.Parameters.AddWithValue("@Street", street);
+            cmd.Parameters.AddWithValue("@City", city);
+            cmd.Parameters.AddWithValue("@State", state);
+            cmd.Parameters.AddWithValue("@Zip", zip);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public void EditClientInfo(int userAccountID, string militaryAffiliation, string street, string city, string state, string zip)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("UPDATE Client SET militaryAffiliation = @MilitaryAffiliation, billingStreet = @Street, billingCity = @City, billingState = @State, billingZip = @Zip WHERE userAccountID = @UserAccountID", conn);
+
+            cmd.Parameters.AddWithValue("@UserAccountID", userAccountID);
+            cmd.Parameters.AddWithValue("@MilitaryAffiliation", militaryAffiliation);
+            cmd.Parameters.AddWithValue("@Street", street);
+            cmd.Parameters.AddWithValue("@City", city);
+            cmd.Parameters.AddWithValue("@State", state);
+            cmd.Parameters.AddWithValue("@Zip", zip);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public void DeleteClientInfo(int userAccountID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("DELETE FROM Client WHERE userAccountID = @UserAccountID", conn);
+            cmd.Parameters.AddWithValue("@UserAccountID", userAccountID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+
+        // *****************
+        // Vehicle Table
+        // *****************
+        public void AddVehicle(string licenseNumber, int year, string make, string model, string userAccountID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("INSERT INTO Vehicle (licenseNumber, year, make, model, userAccountID) VALUES (@LicenseNumber, @Year, @Make, @Model, @UserAccountID)", conn);
+
+            cmd.Parameters.AddWithValue("@licenseNumber", licenseNumber);
+            cmd.Parameters.AddWithValue("@Year", year);
+            cmd.Parameters.AddWithValue("@Make", make);
+            cmd.Parameters.AddWithValue("@Model", model);
+            cmd.Parameters.AddWithValue("@UserAccountID", userAccountID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public void EditVehicle(string licenseNumber, int year, string make, string model, string userAccountID, int vehicleID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("UPDATE Vehicle SET licenseNumber = @LicenseNumber, year = @Year, make = @Make, model = @Model, userAccountID = @UserAccountID WHERE vehicleID = @VehicleID", conn);
+
+            cmd.Parameters.AddWithValue("@licenseNumber", licenseNumber);
+            cmd.Parameters.AddWithValue("@Year", year);
+            cmd.Parameters.AddWithValue("@Make", make);
+            cmd.Parameters.AddWithValue("@Model", model);
+            cmd.Parameters.AddWithValue("@UserAccountID", userAccountID);
+            cmd.Parameters.AddWithValue("@VehicleID", vehicleID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public void DeleteVehicle(int vehicleID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("DELETE FROM Vehicle WHERE vehicleID = @VehicleID", conn);
+            cmd.Parameters.AddWithValue("@UserAccountID", vehicleID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+
+
+        // *****************
+        // VehicleReservation Table
+        // *****************
+        public void LinkVehicleToReservation(int vehicleID, int reservationID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("INSERT INTO VehicleReservation (vehicleID, reservationID) VALUES (@VehicleID, @ReservationID)", conn);
+
+            cmd.Parameters.AddWithValue("@VehicleID", vehicleID);
+            cmd.Parameters.AddWithValue("@ReservationID", reservationID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public void RemoveAllVehiclesFromReservation(int reservationID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("DELETE FROM VehicleReservation WHERE reservationID = @ReservationID", conn);
+
+            cmd.Parameters.AddWithValue("@ReservationID", reservationID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+
+        // *****************
+        // LotReservation
+        // *****************
+        public void AssignLotToReservation(int lotID, int reservationID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("INSERT INTO LotReservation (lotID, reservationID) VALUES (@LotID, @ReservationID)", conn);
+
+            cmd.Parameters.AddWithValue("@LotID", lotID);
+            cmd.Parameters.AddWithValue("@ReservationID", reservationID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public void ClearLotsFromReservation(int reservationID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("DELETE FROM LotReservation WHERE reservationID = @ReservationID", conn);
+
+            cmd.Parameters.AddWithValue("@ReservationID", reservationID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+
+        // *****************
+        // Lot
+        // *****************
+        public void UpdateLotOccupancy(int lotID, bool isOccupied)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("UPDATE Lot SET isOccupied = @Status WHERE lotID = @LotID", conn);
+
+            cmd.Parameters.AddWithValue("@Status", isOccupied);
+            cmd.Parameters.AddWithValue("@LotID", lotID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        // *****************
+        // Report
+        // *****************
+        public void LogReportGeneration(int userAccountID, string reportType)
+        {
+            using var conn = new SqlConnection(_connectionString);
+
+            var cmd = new SqlCommand("INSERT INTO Report (userAccountID, generatedDate, reportType) VALUES (@UserID, GETDATE(), @Type)", conn);
+
+            cmd.Parameters.AddWithValue("@UserID", userAccountID);
+            cmd.Parameters.AddWithValue("@Type", reportType);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
         }
 
     }
