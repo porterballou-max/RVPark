@@ -58,7 +58,11 @@ namespace RVfamcamp.Services
 
             conn.Open();
             var userID = cmd.ExecuteScalar();
-
+            
+            if (userID == null || userID == DBNull.Value)
+            {
+                return -1;
+            }
             return Convert.ToInt32(userID);
         }
 

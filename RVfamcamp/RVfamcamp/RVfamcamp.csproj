@@ -8,6 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Database\RVPark.mdf" />
+    <None Remove="Database\RVPark_log.ldf" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Stripe.net" Version="50.4.1" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.0" />
   </ItemGroup>

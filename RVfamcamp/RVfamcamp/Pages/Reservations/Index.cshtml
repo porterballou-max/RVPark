@@ -47,5 +47,9 @@
             </tr>
         }
     </tbody>
+    @if (Model.Message != null)
+    {
+        <p>@Model.Message</p>
+    }
 
 </table>
