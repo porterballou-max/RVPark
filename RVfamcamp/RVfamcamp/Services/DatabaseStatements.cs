@@ -1,8 +1,9 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Data.SqlClient;
 using RVfamcamp.Models;
-using Microsoft.AspNetCore.Identity;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Security.Cryptography;
 
 namespace RVfamcamp.Services
 {
@@ -587,6 +588,19 @@ namespace RVfamcamp.Services
         // *****************
         // Lot
         // *****************
+        public int getLotID(int lotNumber)
+        {
+            using var conn = new SqlConnection(_connectionString);
+
+            var cmd = new SqlCommand("SELECT lotID FROM Lot WHERE lotNumber = @LotNumber", conn);
+
+            cmd.Parameters.AddWithValue("@LotNumber", lotNumber);
+
+            conn.Open();
+            var lotID = cmd.ExecuteScalar();
+
+            return Convert.ToInt32(lotID);
+        }
         public void UpdateLotOccupancy(int lotID, bool isOccupied)
         {
             using var conn = new SqlConnection(_connectionString);
@@ -615,44 +629,72 @@ namespace RVfamcamp.Services
             cmd.ExecuteNonQuery();
         }
 
-        // **********************************************************
-        // *************** Get User Reservations here ***************
-        // **********************************************************
-
-        /// <summary>
-        /// Gets all reservations for a user
-        /// </summary>
-        /// <param name="userAccountId"></param>
-        /// <returns>List of reservations</returns>
-        public List<Reservation> GetUsersReservations(int userAccountId)
+        // *****************
+        // Payments
+        // *****************
+        public int getPaymentIdByReservation(int reservationID)
         {
-            var reservations = new List<Reservation>();
-
             using var conn = new SqlConnection(_connectionString);
-            var cmd = new SqlCommand(
-                @"SELECT reservationId, startDate, endDate, confirmationNumber 
-          FROM Reservations 
-          WHERE userAccountID = @UserAccountID", conn);
 
-            cmd.Parameters.AddWithValue("@UserAccountID", userAccountId);
+            var cmd = new SqlCommand("SELECT paymentsID FROM Payments WHERE reservationID = @ReservationID", conn);
+
+            cmd.Parameters.AddWithValue("@ReservationID", reservationID);
 
             conn.Open();
-            using var reader = cmd.ExecuteReader();
+            var lotID = cmd.ExecuteScalar();
 
-            while (reader.Read())
-            {
-                reservations.Add(new Reservation
-                {
-                    reservationId = reader.GetInt32(0),
-                    startDate = reader.GetDateTime(1),
-                    endDate = reader.GetDateTime(2),
-                    confirmationNumber = reader.GetInt32(3)
-                });
-            }
+            return Convert.ToInt32(lotID);
+        }
 
-            return reservations;
+        public void AddPayment(decimal total, decimal tax, string summary, string stripeCode, int reservationID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("INSERT INTO Payments (total, taxAmount, paymentDate, summary, stripeCode, reservationID) VALUES (@Total, @Tax, GETDATE(), @Summary, @Stripe, @ReservationID)", conn);
+
+            cmd.Parameters.AddWithValue("@Total", total);
+            cmd.Parameters.AddWithValue("@Tax", tax);
+            cmd.Parameters.AddWithValue("@Summary", summary);
+            cmd.Parameters.AddWithValue("@Stripe", stripeCode);
+            cmd.Parameters.AddWithValue("@ReservationID", reservationID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public bool IsReservationPaid(int reservationID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("SELECT COUNT(*) FROM Payments WHERE reservationID = @ReservationID", conn);
+            cmd.Parameters.AddWithValue("@ReservationID", reservationID);
+
+            conn.Open();
+            int count = (int)cmd.ExecuteScalar();
+            return count > 0;
+        }
+
+        public void UpdatePaymentSummary(int paymentsID, string newSummary)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("UPDATE Payments SET summary = @Summary WHERE paymentsID = @PaymentID", conn);
+
+            cmd.Parameters.AddWithValue("@Summary", newSummary);
+            cmd.Parameters.AddWithValue("@PaymentID", paymentsID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public void DeletePayment(int paymentsID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("DELETE FROM Payments WHERE paymentsID = @PaymentID", conn);
+
+            cmd.Parameters.AddWithValue("@PaymentID", paymentsID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
         }
 
     }
-    
+
 }
