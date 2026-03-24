@@ -276,7 +276,35 @@ namespace RVfamcamp.Services
                 };
             }
         }
-        
+
+        // READ: Reservation
+        public List<Reservation> GetUsersReservations(int userAccountID)
+        {
+            var reservations = new List<Reservation>();
+
+            using var conn = new SqlConnection(_connectionString);
+
+            var cmd = new SqlCommand("SELECT reservationID, startDate, endDate, " +
+                "confirmationNumber FROM Reservation WHERE userAccountID = @UserAccountID", conn);
+            cmd.Parameters.AddWithValue("@UserAccountID", userAccountID);
+
+            conn.Open();
+            using SqlDataReader reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                reservations.Add(new Reservation
+                {
+                    reservationId = reader.GetInt32(0),
+                    startDate = reader.GetDateTime(1),
+                    endDate = reader.GetDateTime(2),
+                    confirmationNumber = reader.GetInt32(3)
+                });
+            }
+
+            return reservations;
+        }
+
         // DELETE: Reservation 
         public void RemoveReservationById(Reservation reservation)
         {
