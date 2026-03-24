@@ -1,25 +1,41 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using RVfamcamp.Models;
+using RVfamcamp.Services;
 using RVPark.Models;
-using System;
 
 namespace RVPark.Pages.Profile
 {
+    [Authorize]
     public class IndexModel : PageModel
     {
-        public ProfileViewModel Profile { get; set; }
+        private readonly DatabaseStatements _db;
+
+        public ProfileViewModel Profile { get; set; } = new();
+
+        public IndexModel(DatabaseStatements db)
+        {
+            _db = db;
+        }
 
         public void OnGet()
         {
-            // TODO: Replace with actual database retrieval
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                return;
+
+            var user = _db.GetUserById(userId);
+            if (user == null) return;
+
+            var client = _db.GetClientInfo(userId);
+
             Profile = new ProfileViewModel
             {
-                Id = 1,
-                FirstName = "Mock",
-                LastName = "User",
-                Email = "test@me.com",
-                Phone = "(999) 999-9999",
-                DateOfBirth = new DateTime(1990, 1, 1),
-                CreatedAt = DateTime.Now.AddYears(-2)
+                Id = user.UserAccountId,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                // Phone removed - we don't store it
             };
         }
     }

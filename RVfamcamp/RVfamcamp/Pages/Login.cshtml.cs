@@ -89,15 +89,15 @@ namespace RVfamcamp.Pages
         }
        
         // Simple DTO for the logged-in user data we need
-        private class UserAccount
-        {
-            public int UserAccountID { get; set; }
-            public string FirstName { get; set; } = "";
-            public string LastName { get; set; } = "";
-            public string EmailAddress { get; set; } = "";
-            public string Username { get; set; } = "";
-            public string Role { get; set; } = "";
-        }
+        //private class UserAccount
+        //{
+        //    public int UserAccountID { get; set; }
+        //    public string FirstName { get; set; } = "";
+        //    public string LastName { get; set; } = "";
+        //    public string EmailAddress { get; set; } = "";
+        //    public string Username { get; set; } = "";
+        //    public string Role { get; set; } = "";
+        //}
 
 
 

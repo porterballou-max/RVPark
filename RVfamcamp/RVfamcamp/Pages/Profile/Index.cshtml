@@ -18,13 +18,13 @@
 
             <h4 class="text-center mb-3">@Model.Profile.FirstName @Model.Profile.LastName</h4>
 
-            <p class="contact text-center mb-1"><i class="bi bi-telephone-fill"></i> @Model.Profile.Phone</p>
             <p class="contact text-center mb-3"><i class="bi bi-envelope-fill"></i> @Model.Profile.Email</p>
 
             <div class="button-group d-flex justify-content-center gap-2 flex-wrap">
                 <a asp-page="./Edit" class="btn btn-primary">Edit Personal Info</a>
                 <a asp-page="./Vehicle" class="btn btn-success">Set Vehicle</a>
                 <a asp-page="./Payment" class="btn btn-danger">Edit Payment Info</a>
+                
             </div>
 
         </div>
@@ -32,3 +32,4 @@
     </div>
 
 </div>
+
