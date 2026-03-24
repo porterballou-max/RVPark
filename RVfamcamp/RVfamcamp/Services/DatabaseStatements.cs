@@ -557,6 +557,58 @@ namespace RVfamcamp.Services
             cmd.ExecuteNonQuery();
         }
 
+        // *****************
+        // Payments
+        // *****************
+        public void AddPayment(decimal total, decimal tax, string summary, string stripeCode, int reservationID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("INSERT INTO Payments (total, taxAmount, paymentDate, summary, stripeCode, reservationID) VALUES (@Total, @Tax, GETDATE(), @Summary, @Stripe, @ReservationID)", conn);
+
+            cmd.Parameters.AddWithValue("@Total", total);
+            cmd.Parameters.AddWithValue("@Tax", tax);
+            cmd.Parameters.AddWithValue("@Summary", summary);
+            cmd.Parameters.AddWithValue("@Stripe", stripeCode);
+            cmd.Parameters.AddWithValue("@ReservationID", reservationID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public bool IsReservationPaid(int reservationID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("SELECT COUNT(*) FROM Payments WHERE reservationID = @ReservationID", conn);
+            cmd.Parameters.AddWithValue("@ReservationID", reservationID);
+
+            conn.Open();
+            int count = (int)cmd.ExecuteScalar();
+            return count > 0;
+        }
+
+        public void UpdatePaymentSummary(int paymentsID, string newSummary)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("UPDATE Payments SET summary = @Summary WHERE paymentsID = @PaymentID", conn);
+
+            cmd.Parameters.AddWithValue("@Summary", newSummary);
+            cmd.Parameters.AddWithValue("@PaymentID", paymentsID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public void DeletePayment(int paymentsID)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("DELETE FROM Payments WHERE paymentsID = @PaymentID", conn);
+
+            cmd.Parameters.AddWithValue("@PaymentID", paymentsID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
     }
-    
+
 }
