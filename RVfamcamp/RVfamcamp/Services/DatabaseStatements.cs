@@ -305,6 +305,37 @@ namespace RVfamcamp.Services
             return reservations;
         }
 
+        // Gets the lots tied to a reservation
+        public List<Lot> GetLotsByReservationId(int reservationId)
+        {
+            List<Lot> lots = new List<Lot>();
+            using var conn = new SqlConnection(_connectionString);
+
+            // We join LotReservation (the link) to Lot (the data)
+            var cmd = new SqlCommand(@"SELECT l.lotID, l.lotNumber, l.lotType, l.isOccupied 
+                   FROM Lot l
+                   JOIN LotReservation lr ON l.lotID = lr.lotID
+                   WHERE lr.reservationID = @ResrvationID", conn);
+
+            cmd.Parameters.AddWithValue("@ResrvationID", reservationId);
+
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                lots.Add(new Lot
+                {
+                    LotId = reader.GetInt32(0),
+                    LotNumber = reader.GetInt32(1),
+                    LotType = reader.GetInt32(2),
+                    IsOccupied = reader.GetBoolean(3)
+                });
+            }
+            return lots;
+        }
+
+
+
         // DELETE: Reservation 
         public void RemoveReservationById(Reservation reservation)
         {
