@@ -6,10 +6,10 @@ using RVfamcamp.Services;
 using System.Linq.Expressions;
 using System.Security.Claims;
 
-public class ReservationsIndexModel : PageModel
+public class ReservationsIndexModel(DatabaseStatements db) : PageModel
 {
     public List<Reservation> Reservations { get; set; }
-    private DatabaseStatements statements;
+    public string? Message { get; set; }
 
     public void OnGet()
     {
@@ -17,28 +17,19 @@ public class ReservationsIndexModel : PageModel
         string? email = User.FindFirst(ClaimTypes.Email)?.Value;
 
         // Ensure there is a user logged in
-        if (email != null)
+        if (email != null && db != null)
         {
-            var userID = statements.GetUserAccountID(email);
+            var userID = db.GetUserAccountID(email);
 
             // Ensure there is a userAccount tied to username
             if (userID != -1)
             {
-                //Reservations = statements.GetUsersReservations(userID);
+                Reservations = db.GetUsersReservations(userID);
             }
         }
         else
         {
-            Reservations.Add
-            (
-                new Reservation
-                {
-                    reservationId = 1,
-                    startDate = DateTime.Today,
-                    endDate = DateTime.Today.AddDays(3),
-                    confirmationNumber = 101
-                }
-            );
+            Message = "Please click 'Create Reservation' to make a reservation.";
         }
     } 
 }

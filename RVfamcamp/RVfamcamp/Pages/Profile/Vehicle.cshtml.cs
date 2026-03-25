@@ -1,37 +1,90 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using RVfamcamp.Services;
 using RVPark.Models;
+using System.Security.Claims;
 
 namespace RVPark.Pages.Profile
 {
+    [Authorize]
     public class VehicleModel : PageModel
     {
+        private readonly DatabaseStatements _db;
+
+        public List<VehicleViewModel> Vehicles { get; set; } = new();
+
         [BindProperty]
-        public VehicleViewModel Vehicle { get; set; }
+        public VehicleViewModel NewVehicle { get; set; } = new();
+
+        public bool CanAddMoreVehicles { get; set; }
+        public bool ShowAddForm { get; set; }
+
+        public VehicleModel(DatabaseStatements db)
+        {
+            _db = db;
+        }
 
         public void OnGet()
         {
-            // TODO: Load current vehicle info from DB if exists
-            Vehicle = new VehicleViewModel
-            {
-                Make = "Ford",
-                Model = "F-150",
-                Year = 2020,
-                LicensePlate = "ABC-123",
-                Color = "Blue"
-            };
+            LoadVehicles();
         }
 
-        public IActionResult OnPost()
+        public IActionResult OnPostAdd()
         {
             if (!ModelState.IsValid)
             {
+                LoadVehicles();
+                ShowAddForm = true;
                 return Page();
             }
 
-            // TODO: Save vehicle info to database
-            TempData["Success"] = "Vehicle information saved successfully!";
-            return RedirectToPage("./Index");
+            var userId = GetCurrentUserId();
+            if (userId == null)
+                return RedirectToPage("/Login");
+
+            // Ensure the user has a Client record (required by FK)
+            _db.EnsureClientRecordExists(userId.Value);
+
+            // Now safely add the vehicle
+            _db.AddVehicle(
+                NewVehicle.LicensePlate ?? "",
+                NewVehicle.Year ?? DateTime.Now.Year,
+                NewVehicle.Make ?? "",
+                NewVehicle.Model ?? "",
+                userId.Value);
+
+            TempData["Success"] = "Vehicle added successfully!";
+            return RedirectToPage();
+        }
+
+        public IActionResult OnPostDelete(int vehicleId)
+        {
+            if (vehicleId > 0)
+            {
+                _db.DeleteVehicle(vehicleId);
+                TempData["Success"] = "Vehicle removed successfully.";
+            }
+            return RedirectToPage();
+        }
+
+        private void LoadVehicles()
+        {
+            var userId = GetCurrentUserId();
+            if (userId == null)
+            {
+                return;
+            }
+
+            // Pass .Value since we've already checked it's not null
+            Vehicles = _db.GetVehiclesByUser(userId.Value);
+            CanAddMoreVehicles = Vehicles.Count < 10;
+        }
+
+        private int? GetCurrentUserId()
+        {
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+            return claim != null && int.TryParse(claim.Value, out int id) ? id : null;
         }
     }
 }

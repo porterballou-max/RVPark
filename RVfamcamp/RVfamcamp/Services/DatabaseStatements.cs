@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using RVfamcamp.Models;
+using RVPark.Models;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Security.Cryptography;
@@ -58,7 +59,11 @@ namespace RVfamcamp.Services
 
             conn.Open();
             var userID = cmd.ExecuteScalar();
-
+            
+            if (userID == null || userID == DBNull.Value)
+            {
+                return -1;
+            }
             return Convert.ToInt32(userID);
         }
 
@@ -276,7 +281,35 @@ namespace RVfamcamp.Services
                 };
             }
         }
-        
+
+        // READ: Reservation
+        public List<Reservation> GetUsersReservations(int userAccountID)
+        {
+            var reservations = new List<Reservation>();
+
+            using var conn = new SqlConnection(_connectionString);
+
+            var cmd = new SqlCommand("SELECT reservationID, startDate, endDate, " +
+                "confirmationNumber FROM Reservation WHERE userAccountID = @UserAccountID", conn);
+            cmd.Parameters.AddWithValue("@UserAccountID", userAccountID);
+
+            conn.Open();
+            using SqlDataReader reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                reservations.Add(new Reservation
+                {
+                    reservationId = reader.GetInt32(0),
+                    startDate = reader.GetDateTime(1),
+                    endDate = reader.GetDateTime(2),
+                    confirmationNumber = reader.GetInt32(3)
+                });
+            }
+
+            return reservations;
+        }
+
         // DELETE: Reservation 
         public void RemoveReservationById(Reservation reservation)
         {
@@ -296,6 +329,35 @@ namespace RVfamcamp.Services
             conn.Open();
             cmd.ExecuteNonQuery();
             conn.Close();
+        }
+
+        // Gets the lots tied to a reservation
+        public List<Lot> GetLotsByReservationId(int reservationId)
+        {
+            List<Lot> lots = new List<Lot>();
+            using var conn = new SqlConnection(_connectionString);
+
+            // We join LotReservation (the link) to Lot (the data)
+            var cmd = new SqlCommand(@"SELECT l.lotID, l.lotNumber, l.lotType, l.isOccupied 
+                   FROM Lot l
+                   JOIN LotReservation lr ON l.lotID = lr.lotID
+                   WHERE lr.reservationID = @ResrvationID", conn);
+
+            cmd.Parameters.AddWithValue("@ResrvationID", reservationId);
+
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                lots.Add(new Lot
+                {
+                    LotId = reader.GetInt32(0),
+                    LotNumber = reader.GetInt32(1),
+                    LotType = reader.GetInt32(2),
+                    IsOccupied = reader.GetBoolean(3)
+                });
+            }
+            return lots;
         }
 
         // Retrieves all Reservation objects whose 'startDate' column corresponds to the given date. 
@@ -412,6 +474,54 @@ namespace RVfamcamp.Services
             return lots;
         }
 
+
+        //This method categorizes reservation information into three categories. Upcoming, In Progress, and Completed.
+        //This is used when making the reports in the reports page.
+        public StatusReport GetStatusReport(DateTime startRange, DateTime endRange)
+        {
+            var report = new StatusReport();
+            DateTime today = DateTime.Today;
+
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand(@"SELECT r.reservationID, r.startDate, r.endDate, r.confirmationNumber,
+                       u.firstName, u.lastName, u.emailAddress, l.lotNumber
+                FROM Reservation r
+                JOIN UserAccount u ON r.userAccountID = u.userAccountID
+                JOIN LotReservation lr ON r.reservationID = lr.reservationID
+                JOIN Lot l ON lr.lotID = l.lotID
+                WHERE r.startDate >= @Start AND r.endDate <= @End", conn);
+
+            cmd.Parameters.AddWithValue("@Start", startRange);
+            cmd.Parameters.AddWithValue("@End", endRange);
+
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                var res = new ReservationDetail
+                {
+                    Id = reader.GetInt32(0),
+                    Start = reader.GetDateTime(1),
+                    End = reader.GetDateTime(2),
+                    Conf = reader.GetInt32(3),
+                    CustomerName = $"{reader.GetString(4)} {reader.GetString(5)}",
+                    Email = reader.GetString(6),
+                    LotNum = reader.GetInt32(7)
+                };
+
+                if (res.End < today)
+                    report.Completed.Add(res);
+                else if (res.Start <= today && res.End >= today)
+                    report.InProgress.Add(res);
+                else
+                    report.Upcoming.Add(res);
+            }
+            return report;
+        }
+
+
+
+
         // *****************
         // Client Table
         // *****************
@@ -488,10 +598,43 @@ namespace RVfamcamp.Services
         // *****************
         // Vehicle Table
         // *****************
-        public void AddVehicle(string licenseNumber, int year, string make, string model, string userAccountID)
+
+        /// Gets all vehicles for a specific user
+        public List<VehicleViewModel> GetVehiclesByUser(int userAccountId)
+        {
+            var vehicles = new List<VehicleViewModel>();
+
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand(
+                @"SELECT vehicleID, licenseNumber, year, make, model 
+          FROM Vehicle 
+          WHERE userAccountID = @UserAccountID", conn);
+
+            cmd.Parameters.AddWithValue("@UserAccountID", userAccountId);
+            conn.Open();
+
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                vehicles.Add(new VehicleViewModel
+                {
+                    Id = reader.GetInt32(0),
+                    LicensePlate = reader.GetString(1),
+                    Year = reader.GetInt32(2),
+                    Make = reader.GetString(3),
+                    Model = reader.GetString(4),
+                    Color = ""   // Default to empty
+                });
+            }
+
+            return vehicles;
+        }
+
+        public void AddVehicle(string licenseNumber, int year, string make, string model, int userAccountID)
         {
             using var conn = new SqlConnection(_connectionString);
-            var cmd = new SqlCommand("INSERT INTO Vehicle (licenseNumber, year, make, model, userAccountID) VALUES (@LicenseNumber, @Year, @Make, @Model, @UserAccountID)", conn);
+            var cmd = new SqlCommand(@"INSERT INTO Vehicle (licenseNumber, year, make, model, userAccountID) VALUES (@LicenseNumber, @Year, @Make, @Model, @UserAccountID)", conn);
 
             cmd.Parameters.AddWithValue("@licenseNumber", licenseNumber);
             cmd.Parameters.AddWithValue("@Year", year);
@@ -523,12 +666,35 @@ namespace RVfamcamp.Services
         {
             using var conn = new SqlConnection(_connectionString);
             var cmd = new SqlCommand("DELETE FROM Vehicle WHERE vehicleID = @VehicleID", conn);
-            cmd.Parameters.AddWithValue("@UserAccountID", vehicleID);
+            cmd.Parameters.AddWithValue("@VehicleID", vehicleID);
 
             conn.Open();
             cmd.ExecuteNonQuery();
         }
 
+        // Necessary to check for a client record (and create if missing) before adding a vehicle, otherwise things break.
+        public void EnsureClientRecordExists(int userAccountId)
+        {
+            // Check if Client record already exists
+            using var conn = new SqlConnection(_connectionString);
+            var checkCmd = new SqlCommand(
+                "SELECT COUNT(*) FROM Client WHERE userAccountID = @UserId", conn);
+            checkCmd.Parameters.AddWithValue("@UserId", userAccountId);
+            conn.Open();
+
+            var count = (int)checkCmd.ExecuteScalar();
+
+            if (count > 0)
+                return; // Already exists
+
+            // Create minimal Client record
+            var insertCmd = new SqlCommand(
+                @"INSERT INTO Client (userAccountID, militaryAffiliation, billingStreet, billingCity, billingState, billingZip)
+          VALUES (@UserId, '', '', '', '', '')", conn);
+
+            insertCmd.Parameters.AddWithValue("@UserId", userAccountId);
+            insertCmd.ExecuteNonQuery();
+        }
 
 
         // *****************
