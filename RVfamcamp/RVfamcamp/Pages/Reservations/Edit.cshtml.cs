@@ -23,7 +23,7 @@ public class EditModel(DatabaseStatements db) : PageModel
         // TODO: Update database
         else
         {
-            db.
+            
         }
 
         return RedirectToPage("Index");

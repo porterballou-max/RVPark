@@ -227,7 +227,7 @@ namespace RVfamcamp.Services
                 """
                     INSERT INTO Reservation (StartDate, EndDate, ConfirmationNumber)
                     VALUES (@startDate, @endDate, @confirmationNumber)
-                """);
+                """, conn);
             cmd.Parameters.AddWithValue("@startDate", reservation.startDate);
             cmd.Parameters.AddWithValue("@endDate", reservation.endDate);
             cmd.Parameters.AddWithValue("@confirmationNumber", reservation.confirmationNumber);
@@ -317,7 +317,7 @@ namespace RVfamcamp.Services
             
             // Delete entry in vehicle reservation if it exists. 
             var cmdDelVehicleRegistration =
-                new SqlCommand("DELETE FROM VehicleReservation vr WHERE vr.reservationID == @reservationId");
+                new SqlCommand("DELETE FROM VehicleReservation vr WHERE vr.reservationID == @reservationId", conn);
             cmdDelVehicleRegistration.Parameters.AddWithValue("@reservationId", reservation.reservationId);
             conn.Open();
             cmdDelVehicleRegistration.ExecuteNonQuery();
@@ -371,7 +371,7 @@ namespace RVfamcamp.Services
                 """
                 SELECT ReservationID, StartDate, EndDate, ConfirmationNumber FROM Reservation
                 WHERE CAST(startDate AS DATE) = @ArrivalDate
-                """
+                """, conn
             );
             cmd.Parameters.AddWithValue("@ArrivalDate", date);            
             
@@ -405,7 +405,7 @@ namespace RVfamcamp.Services
                 """
                 SELECT ReservationID, StartDate, EndDate, ConfirmationNumber FROM Reservation
                 WHERE CAST(endDate AS DATE) = @DepartureDate
-                """
+                """, conn
             );
             cmd.Parameters.AddWithValue("@DepartureDate", date);            
             
@@ -453,14 +453,14 @@ namespace RVfamcamp.Services
                 INNER JOIN Lot l
                 ON l.lotID = lr.LotID
                 WHERE CAST(r.startDate AS DATE) > @endDate OR CAST(r.endDate AS DATE) < @startDate
-                """
+                """, conn
             );
             cmd.Parameters.AddWithValue("@startDate", start);
             cmd.Parameters.AddWithValue("@endDate", end);
             
             conn.Open();
             
-            using SqlDataReader reader = cmd.ExecuteReader();
+            using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
                 lots.Add(new Lot
