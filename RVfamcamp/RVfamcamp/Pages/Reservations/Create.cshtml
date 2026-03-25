@@ -27,3 +27,162 @@
     <a asp-page="Index" class="btn btn-secondary">Cancel</a>
 
 </form>
+
+<div id="calendar-container">
+    <div class="calendar-header">
+        <button onclick="changeMonth(-1)">◀</button>
+        <span id="monthYear"></span>
+        <button onclick="changeMonth(1)">▶</button>
+    </div>
+
+    <div class="calendar-grid" id="calendar"></div>
+</div>
+
+<input type="hidden" id="startDate" name="StartDate" />
+<input type="hidden" id="endDate" name="EndDate" />
+
+<style>
+    #calendar-container {
+        width: 300px;
+        font-family: Arial;
+    }
+
+    .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 5px;
+    }
+
+    .day {
+        padding: 10px;
+        text-align: center;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+
+    .day:hover {
+        background-color: #eee;
+    }
+
+    .selected {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .in-range {
+        background-color: #cfe2ff;
+    }
+
+    .header-day {
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .past-date {
+        color: #ccc;
+        pointer-events: none;
+        cursor: not-allowed;
+    }
+</style>
+
+<script>
+    let currentDate = new Date();
+    let startDate = null;
+    let endDate = null;
+
+    function renderCalendar() {
+        const calendar = document.getElementById("calendar");
+        const monthYear = document.getElementById("monthYear");
+
+        calendar.innerHTML = "";
+
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+
+        monthYear.innerText = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        const daysOfWeek = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+        daysOfWeek.forEach(d => {
+            let div = document.createElement("div");
+            div.className = "header-day";
+            div.innerText = d;
+            calendar.appendChild(div);
+        });
+
+        for (let i = 0; i < firstDay; i++) {
+            calendar.appendChild(document.createElement("div"));
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            let date = new Date(year, month, day);
+            let div = document.createElement("div");
+            div.className = "day";
+            div.innerText = day;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            if (date < today) {
+                div.classList.add("past-date");
+            } else {
+                div.onclick = () => selectDate(date);
+            }
+
+            if (startDate && isSameDate(date, startDate)) {
+                div.classList.add("selected");
+            }
+
+            if (endDate && isSameDate(date, endDate)) {
+                div.classList.add("selected");
+            }
+
+            if (startDate && endDate && date > startDate && date < endDate) {
+                div.classList.add("in-range");
+            }
+
+            calendar.appendChild(div);
+        }
+    }
+
+    function selectDate(date) {
+        if (!startDate || (startDate && endDate)) {
+            startDate = date;
+            endDate = null;
+        } else if (date < startDate) {
+            endDate = startDate;
+            startDate = date;
+        } else {
+            endDate = date;
+        }
+
+        document.getElementById("startDate").value = formatDate(startDate);
+        document.getElementById("endDate").value = endDate ? formatDate(endDate) : "";
+
+        renderCalendar();
+    }
+
+    function changeMonth(offset) {
+        currentDate.setMonth(currentDate.getMonth() + offset);
+        renderCalendar();
+    }
+
+    function isSameDate(d1, d2) {
+        return d1.toDateString() === d2.toDateString();
+    }
+
+    function formatDate(date) {
+        return date.toISOString().split('T')[0];
+    }
+
+    renderCalendar();
+</script>
