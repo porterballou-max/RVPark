@@ -22,7 +22,10 @@ public class CreateModel(DatabaseStatements db) : PageModel
 
     public void OnGet()
     {
-        
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
+        StartDate = today;
+        EndDate = today.AddDays(1);
     }
 
     public IActionResult OnPostCheckAvailability()

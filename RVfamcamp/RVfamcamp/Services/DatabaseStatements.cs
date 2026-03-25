@@ -338,7 +338,7 @@ namespace RVfamcamp.Services
             using var conn = new SqlConnection(_connectionString);
 
             // We join LotReservation (the link) to Lot (the data)
-            var cmd = new SqlCommand(@"SELECT l.lotID, l.lotNumber, l.lotType, l.isOccupied 
+            var cmd = new SqlCommand(@"SELECT l.lotID, l.lotType, l.isOccupied 
                    FROM Lot l
                    JOIN LotReservation lr ON l.lotID = lr.lotID
                    WHERE lr.reservationID = @ResrvationID", conn);
@@ -352,9 +352,8 @@ namespace RVfamcamp.Services
                 lots.Add(new Lot
                 {
                     LotId = reader.GetInt32(0),
-                    LotNumber = reader.GetInt32(1),
-                    LotType = reader.GetInt32(2),
-                    IsOccupied = reader.GetBoolean(3)
+                    LotType = reader.GetInt32(1),
+                    IsOccupied = reader.GetBoolean(2)
                 });
             }
             return lots;
@@ -467,7 +466,7 @@ namespace RVfamcamp.Services
                 {
                     LotId = reader.GetInt32(0),
                     IsOccupied = reader.GetBoolean(1),
-                    LotType = reader.GetInt32(2),
+                    LotType = reader.GetInt32(2)
                 });
             }
 
@@ -723,6 +722,8 @@ namespace RVfamcamp.Services
             cmd.ExecuteNonQuery();
         }
 
+
+
         // *****************
         // Report
         // *****************
@@ -841,7 +842,7 @@ namespace RVfamcamp.Services
         {
             var lotTypes = new List<LotType>();
             using var conn = new SqlConnection(_connectionString);
-            var cmd = new SqlCommand("SELECT lotType, typeName, basePrice FROM LotType", conn);
+            var cmd = new SqlCommand("SELECT lotType, typeName, basePrice, lotSize FROM LotType", conn);
 
             conn.Open();
             using var reader = cmd.ExecuteReader();
@@ -851,7 +852,8 @@ namespace RVfamcamp.Services
                 {
                     LotTypeID = reader.GetInt32(0),
                     TypeName = reader.GetString(1),
-                    BasePrice = reader.GetDecimal(2)
+                    BasePrice = reader.GetDecimal(2),
+                    LotSize = reader.GetInt32(3)
                 });
             }
             return lotTypes;
