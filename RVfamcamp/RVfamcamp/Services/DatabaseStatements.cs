@@ -473,6 +473,54 @@ namespace RVfamcamp.Services
             return lots;
         }
 
+
+        //This method categorizes reservation information into three categories. Upcoming, In Progress, and Completed.
+        //This is used when making the reports in the reports page.
+        public StatusReport GetStatusReport(DateTime startRange, DateTime endRange)
+        {
+            var report = new StatusReport();
+            DateTime today = DateTime.Today;
+
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand(@"SELECT r.reservationID, r.startDate, r.endDate, r.confirmationNumber,
+                       u.firstName, u.lastName, u.emailAddress, l.lotNumber
+                FROM Reservation r
+                JOIN UserAccount u ON r.userAccountID = u.userAccountID
+                JOIN LotReservation lr ON r.reservationID = lr.reservationID
+                JOIN Lot l ON lr.lotID = l.lotID
+                WHERE r.startDate >= @Start AND r.endDate <= @End", conn);
+
+            cmd.Parameters.AddWithValue("@Start", startRange);
+            cmd.Parameters.AddWithValue("@End", endRange);
+
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                var res = new ReservationDetail
+                {
+                    Id = reader.GetInt32(0),
+                    Start = reader.GetDateTime(1),
+                    End = reader.GetDateTime(2),
+                    Conf = reader.GetInt32(3),
+                    CustomerName = $"{reader.GetString(4)} {reader.GetString(5)}",
+                    Email = reader.GetString(6),
+                    LotNum = reader.GetInt32(7)
+                };
+
+                if (res.End < today)
+                    report.Completed.Add(res);
+                else if (res.Start <= today && res.End >= today)
+                    report.InProgress.Add(res);
+                else
+                    report.Upcoming.Add(res);
+            }
+            return report;
+        }
+
+
+
+
         // *****************
         // Client Table
         // *****************

@@ -1,0 +1,101 @@
+﻿@page
+@model ReportsModel
+@{
+    ViewData["Title"] = "Park Reports";
+}
+
+<div class="container mt-4">
+    <h2>RV Park Reports</h2>
+    <hr />
+
+    <form method="post" class="row g-3 align-items-end mb-5">
+        <div class="col-md-4">
+            <label class="form-label">Start Date</label>
+            <input type="date" asp-for="StartDate" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">End Date</label>
+            <input type="date" asp-for="EndDate" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <button type="submit" class="btn btn-primary w-100">Generate Reports</button>
+        </div>
+    </form>
+
+    @if (Model.ShowReports && Model.MyStatusReport != null)
+    {
+    <div class="row">
+<div class="col-md-6">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Current & Upcoming</h5>
+        </div>
+        <div class="card-body">
+
+            <h6>Currently In Park (@Model.MyStatusReport.InProgress.Count)</h6>
+            <ul class="list-group mb-4">
+                @foreach (var res in Model.MyStatusReport.InProgress)
+                {
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>@res.CustomerName</strong><br />
+                        <small class="text-primary">@res.Email</small><br />
+                        <small class="text-muted">Ends: @res.End.ToShortDateString()</small>
+                    </div>
+                    <span class="badge bg-primary rounded-pill">Site @res.LotNum</span>
+                </li>
+                }
+            </ul>
+
+            <h6>Upcoming Arrivals (@Model.MyStatusReport.Upcoming.Count)</h6>
+            <ul class="list-group">
+                @foreach (var res in Model.MyStatusReport.Upcoming)
+                {
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>@res.CustomerName</strong><br />
+                        <small class="text-primary">@res.Email</small><br />
+                        <small class="text-muted">
+                            @res.Start.ToShortDateString() - @res.End.ToShortDateString()
+                        </small>
+                    </div>
+                    <span class="badge bg-secondary rounded-pill">Site @res.LotNum</span>
+                </li>
+                }
+            </ul>
+
+        </div>
+    </div>
+</div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Completed Reservations</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Guest</th>
+                                <th>Site</th>
+                                <th>Conf #</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var res in Model.MyStatusReport.Completed)
+                                {
+                            <tr>
+                                <td>@res.CustomerName</td>
+                                <td>@res.LotNum</td>
+                                <td>@res.Conf</td>
+                            </tr>
+                                }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+</div>
