@@ -9,9 +9,34 @@
 <div class="card p-3">
     <p><strong>Check-In:</strong> @Model.Reservation.startDate.ToShortDateString()</p>
     <p><strong>Check-Out:</strong> @Model.Reservation.endDate.ToShortDateString()</p>
-    <p><strong>Guests:</strong> @Model.Reservation.confirmationNumber>
+    <p><strong>Confirmation Number:</strong> @Model.Reservation.confirmationNumber</p>
 
 </div>
+
+@if (Model.Lots != null && Model.Lots.Count > 0)
+{
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Lot Number</th>
+                    <th>Lot Type</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var lot in Model.Lots)
+                {
+                    <tr>
+                        <td>@lot.LotNumber</td>
+                        <td>@lot.LotType</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+}
+else
+{
+    <p>No lot information for this reservation</p>
+}
 
 <a asp-page="Edit" asp-route-id="@Model.Reservation.reservationId" class="btn btn-success mt-3">Edit</a>
 <a asp-page="Index" class="btn btn-secondary mt-3">Back</a>

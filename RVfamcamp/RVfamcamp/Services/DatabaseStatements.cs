@@ -271,6 +271,7 @@ namespace RVfamcamp.Services
             }
             else
             {
+                reader.Read();
                 return new Reservation
                 {
                     reservationId = reader.GetInt32(0),
