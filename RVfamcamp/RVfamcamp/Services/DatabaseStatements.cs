@@ -2,6 +2,7 @@
 using Microsoft.Data.SqlClient;
 using RVfamcamp.Models;
 using System.ComponentModel;
+using System.Data;
 using System.Diagnostics;
 using System.Security.Cryptography;
 
@@ -219,20 +220,26 @@ namespace RVfamcamp.Services
         }
         
         // CREATE: Reservations
-        public void AddReservation(Reservation reservation)
+        public int AddReservation(Reservation reservation, int userAccountID)
         {
             
             using var conn = new SqlConnection(_connectionString);
             var cmd = new SqlCommand(
                 """
-                    INSERT INTO Reservation (StartDate, EndDate, ConfirmationNumber)
-                    VALUES (@startDate, @endDate, @confirmationNumber)
+                    INSERT INTO Reservation (StartDate, EndDate, ConfirmationNumber, userAccountID)
+                    VALUES (@startDate, @endDate, @confirmationNumber, @userAccountID);
+                    SELECT SCOPE_IDENTITY();
                 """, conn);
             cmd.Parameters.AddWithValue("@startDate", reservation.startDate);
             cmd.Parameters.AddWithValue("@endDate", reservation.endDate);
             cmd.Parameters.AddWithValue("@confirmationNumber", reservation.confirmationNumber);
+            cmd.Parameters.AddWithValue("@userAccountID", userAccountID);
             conn.Open();
-            cmd.ExecuteNonQuery();
+            var result = cmd.ExecuteScalar();
+
+            return Convert.ToInt32(result);
+
+
         }
         
         // READ: Reservations
@@ -722,6 +729,49 @@ namespace RVfamcamp.Services
             cmd.ExecuteNonQuery();
         }
 
+        public List<Lot> GetVacantLots(DateOnly startDate, DateOnly endDate)
+        {
+            List<Lot> lots = new List<Lot>();
+
+            using var conn = new SqlConnection(_connectionString);
+
+            using var cmd = new SqlCommand(
+                """
+                SELECT l.LotId, l.IsOccupied, l.LotType
+                FROM Lot l
+                WHERE l.IsOccupied = 0
+                AND l.LotId NOT IN (
+                    SELECT lr.LotId
+                    FROM LotReservation lr
+                    JOIN Reservation r ON lr.ReservationId = r.ReservationID
+                    WHERE NOT (
+                        r.EndDate <= @StartDate OR r.StartDate >= @EndDate
+                    )
+                )
+                """, conn);
+
+            cmd.Parameters.Add("@StartDate", SqlDbType.Date)
+                .Value = startDate.ToDateTime(TimeOnly.MinValue);
+
+            cmd.Parameters.Add("@EndDate", SqlDbType.Date)
+                .Value = endDate.ToDateTime(TimeOnly.MinValue);
+
+            conn.Open();
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                lots.Add(new Lot
+                {
+                    LotId = reader.GetInt32(0),
+                    IsOccupied = reader.GetBoolean(1),
+                    LotType = reader.GetInt32(2)
+                });
+            }
+
+            return lots;
+
+        }
 
 
         // *****************

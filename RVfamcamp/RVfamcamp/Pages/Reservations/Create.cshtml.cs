@@ -1,9 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System;
 using RVfamcamp.Models;
-using System.ComponentModel;
 using RVfamcamp.Services;
+using Stripe;
+using System;
+using System.ComponentModel;
+using System.Security.Claims;
+using System.Security.Cryptography;
 
 public class CreateModel(DatabaseStatements db) : PageModel
 {
@@ -50,7 +54,7 @@ public class CreateModel(DatabaseStatements db) : PageModel
         if (!ModelState.IsValid)
             return Page();
 
-        Available_Lots = (List<Lot>?)db.GetVacantLotsOverRange(StartDate, EndDate);
+        Available_Lots = (List<Lot>?)db.GetVacantLots(StartDate, EndDate);
         Available_Lots_Types = (List<LotType>?)db.GetAllLotTypes();
 
         return Page();
@@ -62,14 +66,44 @@ public class CreateModel(DatabaseStatements db) : PageModel
         {
             return Page();
         }
+
+        // Get current userID
+        string? email = User.FindFirst(ClaimTypes.Email)?.Value;
+        if (email == null)
+        {
+            return RedirectToPage("../Login");
+        }
+        var userID = db.GetUserAccountID(email);
+
         // Split Selected lots into list
-        var lotIds = SelectedLotIds
+        var lotIDs = SelectedLotIds
             .Split(',', StringSplitOptions.RemoveEmptyEntries)
             .Select(int.Parse)
             .ToList();
 
-        // Create new reservation using StartDate, EndDate, SelectedLotId
+        // Generate random confirmation number
+        var rand = new Random();
+        int number = rand.Next(10000, 100000);
 
+        // initialize reservation
+        Reservation = new Reservation
+        {
+            // Create new reservation using StartDate, EndDate, SelectedLotId
+            startDate = StartDate.ToDateTime(TimeOnly.MinValue),
+            endDate = EndDate.ToDateTime(TimeOnly.MinValue),
+            confirmationNumber = number
+        };
+
+        // Add Reservation to database
+        int resID = db.AddReservation(Reservation, userID);
+
+        // Tie reservation to selected lots
+        foreach (var lotID in lotIDs){
+            db.AssignLotToReservation(lotID, resID);
+
+            // Change lot availability
+            db.UpdateLotOccupancy(lotID, true);
+        }
 
         return RedirectToPage("Index");
     }
