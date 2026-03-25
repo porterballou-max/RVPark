@@ -24,7 +24,7 @@ public class ReservationsIndexModel : PageModel
             // Ensure there is a userAccount tied to username
             if (userID != -1)
             {
-                Reservations = statements.GetUsersReservations(userID);
+                //Reservations = statements.GetUsersReservations(userID);
             }
         }
         else

@@ -16,8 +16,7 @@ builder.Services.Configure<AppSettings>(
 );
 
 builder.Services.AddScoped<StripeService>();
-builder.Services.AddSingleton<PaymentRepo>(); // TODO: Changed back to AddScoped once I connect this Repo to the real data base
-
+builder.Services.AddScoped<PaymentRepo>();
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
