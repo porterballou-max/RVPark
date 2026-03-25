@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using RVfamcamp.Models;
+using RVPark.Models;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Security.Cryptography;
@@ -597,10 +598,43 @@ namespace RVfamcamp.Services
         // *****************
         // Vehicle Table
         // *****************
-        public void AddVehicle(string licenseNumber, int year, string make, string model, string userAccountID)
+
+        /// Gets all vehicles for a specific user
+        public List<VehicleViewModel> GetVehiclesByUser(int userAccountId)
+        {
+            var vehicles = new List<VehicleViewModel>();
+
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand(
+                @"SELECT vehicleID, licenseNumber, year, make, model 
+          FROM Vehicle 
+          WHERE userAccountID = @UserAccountID", conn);
+
+            cmd.Parameters.AddWithValue("@UserAccountID", userAccountId);
+            conn.Open();
+
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                vehicles.Add(new VehicleViewModel
+                {
+                    Id = reader.GetInt32(0),
+                    LicensePlate = reader.GetString(1),
+                    Year = reader.GetInt32(2),
+                    Make = reader.GetString(3),
+                    Model = reader.GetString(4),
+                    Color = ""   // Default to empty
+                });
+            }
+
+            return vehicles;
+        }
+
+        public void AddVehicle(string licenseNumber, int year, string make, string model, int userAccountID)
         {
             using var conn = new SqlConnection(_connectionString);
-            var cmd = new SqlCommand("INSERT INTO Vehicle (licenseNumber, year, make, model, userAccountID) VALUES (@LicenseNumber, @Year, @Make, @Model, @UserAccountID)", conn);
+            var cmd = new SqlCommand(@"INSERT INTO Vehicle (licenseNumber, year, make, model, userAccountID) VALUES (@LicenseNumber, @Year, @Make, @Model, @UserAccountID)", conn);
 
             cmd.Parameters.AddWithValue("@licenseNumber", licenseNumber);
             cmd.Parameters.AddWithValue("@Year", year);
@@ -632,12 +666,35 @@ namespace RVfamcamp.Services
         {
             using var conn = new SqlConnection(_connectionString);
             var cmd = new SqlCommand("DELETE FROM Vehicle WHERE vehicleID = @VehicleID", conn);
-            cmd.Parameters.AddWithValue("@UserAccountID", vehicleID);
+            cmd.Parameters.AddWithValue("@VehicleID", vehicleID);
 
             conn.Open();
             cmd.ExecuteNonQuery();
         }
 
+        // Necessary to check for a client record (and create if missing) before adding a vehicle, otherwise things break.
+        public void EnsureClientRecordExists(int userAccountId)
+        {
+            // Check if Client record already exists
+            using var conn = new SqlConnection(_connectionString);
+            var checkCmd = new SqlCommand(
+                "SELECT COUNT(*) FROM Client WHERE userAccountID = @UserId", conn);
+            checkCmd.Parameters.AddWithValue("@UserId", userAccountId);
+            conn.Open();
+
+            var count = (int)checkCmd.ExecuteScalar();
+
+            if (count > 0)
+                return; // Already exists
+
+            // Create minimal Client record
+            var insertCmd = new SqlCommand(
+                @"INSERT INTO Client (userAccountID, militaryAffiliation, billingStreet, billingCity, billingState, billingZip)
+          VALUES (@UserId, '', '', '', '', '')", conn);
+
+            insertCmd.Parameters.AddWithValue("@UserId", userAccountId);
+            insertCmd.ExecuteNonQuery();
+        }
 
 
         // *****************
