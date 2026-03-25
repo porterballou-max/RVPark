@@ -26,7 +26,7 @@ namespace RVfamcamp.Services
 
             using var conn = new SqlConnection(_connectionString);
 
-            var cmd = new SqlCommand("SELECT userAccountID, emailAddress FROM UserAccount", conn);
+            var cmd = new SqlCommand("SELECT userAccountID, firstName, lastName, emailAddress, role FROM UserAccount", conn);
 
             conn.Open();
             using SqlDataReader reader = cmd.ExecuteReader();
@@ -36,7 +36,10 @@ namespace RVfamcamp.Services
                 users.Add(new UserAccount
                 {
                     UserAccountId = reader.GetInt32(0),
-                    Email = reader.GetString(1),
+                    FirstName = reader.GetString(1),
+                    LastName = reader.GetString(2),
+                    Email = reader.GetString(3),
+                    Role = reader.GetString(4)
                 });
             }
 
@@ -145,6 +148,17 @@ namespace RVfamcamp.Services
             cmd.Parameters.AddWithValue("@FirstName", firstName);
             cmd.Parameters.AddWithValue("@LastName", lastName);
             cmd.Parameters.AddWithValue("@UserAccountID", userId);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public void UpdateUserRole(int userAccountId, string newRole)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("UPDATE UserAccount SET role = @Role WHERE userAccountID = @UserAccountID", conn);
+            cmd.Parameters.AddWithValue("@Role", newRole);
+            cmd.Parameters.AddWithValue("@UserAccountID", userAccountId);
 
             conn.Open();
             cmd.ExecuteNonQuery();

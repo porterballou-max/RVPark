@@ -40,10 +40,19 @@
                             <li class="nav-item">
                                 <a class="nav-link" asp-page="/Profile/Index">Profile</a>
                             </li>
+                            @if (User.IsInRole("Admin") || User.IsInRole("Employee"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-page="/Reports/Index">Reports</a>
+                                </li>
+                            }
+                            @if (User.IsInRole("Admin")) 
+                            {
                             <li class="nav-item">
-                                <a class="nav-link" asp-page="/Reports/Index">Reports</a>
+                                <a class="nav-link" asp-page="/AdminTools">Admin Tools</a>
                             </li>
-                        }
+                            }
+                            }
 
                     </ul>
 
