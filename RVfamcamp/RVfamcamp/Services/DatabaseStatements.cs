@@ -58,7 +58,11 @@ namespace RVfamcamp.Services
 
             conn.Open();
             var userID = cmd.ExecuteScalar();
-
+            
+            if (userID == null || userID == DBNull.Value)
+            {
+                return -1;
+            }
             return Convert.ToInt32(userID);
         }
 
@@ -276,7 +280,35 @@ namespace RVfamcamp.Services
                 };
             }
         }
-        
+
+        // READ: Reservation
+        public List<Reservation> GetUsersReservations(int userAccountID)
+        {
+            var reservations = new List<Reservation>();
+
+            using var conn = new SqlConnection(_connectionString);
+
+            var cmd = new SqlCommand("SELECT reservationID, startDate, endDate, " +
+                "confirmationNumber FROM Reservation WHERE userAccountID = @UserAccountID", conn);
+            cmd.Parameters.AddWithValue("@UserAccountID", userAccountID);
+
+            conn.Open();
+            using SqlDataReader reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                reservations.Add(new Reservation
+                {
+                    reservationId = reader.GetInt32(0),
+                    startDate = reader.GetDateTime(1),
+                    endDate = reader.GetDateTime(2),
+                    confirmationNumber = reader.GetInt32(3)
+                });
+            }
+
+            return reservations;
+        }
+
         // DELETE: Reservation 
         public void RemoveReservationById(Reservation reservation)
         {
@@ -296,6 +328,35 @@ namespace RVfamcamp.Services
             conn.Open();
             cmd.ExecuteNonQuery();
             conn.Close();
+        }
+
+        // Gets the lots tied to a reservation
+        public List<Lot> GetLotsByReservationId(int reservationId)
+        {
+            List<Lot> lots = new List<Lot>();
+            using var conn = new SqlConnection(_connectionString);
+
+            // We join LotReservation (the link) to Lot (the data)
+            var cmd = new SqlCommand(@"SELECT l.lotID, l.lotNumber, l.lotType, l.isOccupied 
+                   FROM Lot l
+                   JOIN LotReservation lr ON l.lotID = lr.lotID
+                   WHERE lr.reservationID = @ResrvationID", conn);
+
+            cmd.Parameters.AddWithValue("@ResrvationID", reservationId);
+
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                lots.Add(new Lot
+                {
+                    LotId = reader.GetInt32(0),
+                    LotNumber = reader.GetInt32(1),
+                    LotType = reader.GetInt32(2),
+                    IsOccupied = reader.GetBoolean(3)
+                });
+            }
+            return lots;
         }
 
         // Retrieves all Reservation objects whose 'startDate' column corresponds to the given date. 
