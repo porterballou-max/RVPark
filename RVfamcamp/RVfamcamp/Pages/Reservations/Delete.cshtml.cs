@@ -15,12 +15,16 @@ namespace RVfamcamp.Pages.Reservations
             if (payment != 0)
             {
                 TempData["Message"] = "Reservation cannot be deleted payment already made";
+                return Page();
+            }
+            else
+            {
+                db.ClearLotsFromReservation(id);
+                db.RemoveReservationById(id);
+
                 return RedirectToPage("Index");
             }
-            db.ClearLotsFromReservation(id);
-            db.RemoveReservationById(id);
-            
-            return RedirectToPage("Index");
+
         }
     }
 }
