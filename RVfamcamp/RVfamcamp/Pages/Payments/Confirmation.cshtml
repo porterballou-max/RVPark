@@ -4,5 +4,71 @@
 	ViewData["Title"] = "Payment Confirmed";
 }
 
-<h1>Your payments was successful!</h1>
-<p>Display Reservation Details here!</p>
+<h1>Your payment was successful!</h1>
+
+@if (Model.stripeSession == null)
+{
+	<p>Payment session could not be loaded.</p>
+}
+else
+{
+	<h3>Payment Details</h3>
+	<p><strong>Status:</strong> @Model.stripeSession.PaymentStatus</p>
+	<p><strong>Amount Total:</strong> @(((Model.stripeSession.AmountTotal ?? 0) / 100m).ToString("C"))</p>
+	<p><strong>Currency:</strong> @Model.stripeSession.Currency?.ToUpper()</p>
+
+	@if (Model.stripeSession.CustomerDetails != null && !string.IsNullOrWhiteSpace(Model.stripeSession.CustomerDetails.Email))
+	{
+		<p><strong>Email:</strong> @Model.stripeSession.CustomerDetails.Email</p>
+	}
+
+	<h3>Reservation Details</h3>
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">Reservation Summary</h3>
+
+            <p><strong>Reservation ID:</strong> @Model.reservation.reservationId</p>
+            <p><strong>Confirmation Number:</strong> @Model.reservation.confirmationNumber</p>
+            <p><strong>Start Date:</strong> @Model.reservation.startDate.ToShortDateString()</p>
+            <p><strong>End Date:</strong> @Model.reservation.endDate.ToShortDateString()</p>
+            <p><strong>Number of Nights:</strong> @Model.numberOfNights</p>
+        </div>
+    </div>
+
+    <br />
+
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">Lots Included</h3>
+
+            @if (Model.lotLines.Count == 0)
+            {
+                <p>No lots were found for this reservation.</p>
+            }
+            else
+            {
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Lot ID</th>
+                            <th>Type</th>
+                            <th>Nightly Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var lot in Model.lotLines)
+                        {
+                            <tr>
+                                <td>@lot.lotId</td>
+                                <td>@lot.typeName</td>
+                                <td>@lot.nightlyRate.ToString("C")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+
+    <br />
+}

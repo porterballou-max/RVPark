@@ -4,6 +4,9 @@
 	ViewData["Title"] = "Payment Canceled";
 }
 
-<h1>Your payment was Cancled!</h1>
-<p>Display Payment details here!</p>
-<p>Display Cancelation details here!</p>
+<h1>Your payment was canceled!</h1>
+
+<p>No charge was completed.</p>
+<p>Your reservation has not been paid yet.</p>
+<p>You can return to the payment page and try again if needed.</p>
+<a class="btn btn-sm btn-outline-warning" asp-page="/payments/makePayment" asp-route-redID="Model.reservationId">Retry</a>

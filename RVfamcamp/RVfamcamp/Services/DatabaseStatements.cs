@@ -878,6 +878,35 @@ namespace RVfamcamp.Services
             return Convert.ToInt32(lotID);
         }
 
+        public List<paymentModel> getPaymentsByUserID(int userID)
+        {
+			using var conn = new SqlConnection(_connectionString);
+
+			var cmd = new SqlCommand("select p.paymentDate, p.reservationID, p.paymentsID, p.stripeCode, p.summary, p.taxAmount, p.total from Payments p\r\ninner join Reservation r on p.reservationID = r.reservationID\r\ninner join Client c on c.userAccountID = r.userAccountID\r\ninner join UserAccount ua on c.userAccountID = ua.userAccountID\r\nwhere ua.userAccountID = @userID", conn);
+
+			cmd.Parameters.AddWithValue("@userID", userID);
+            conn.Open();
+
+			using var reader = cmd.ExecuteReader();
+            List<paymentModel> userPayments = new();
+
+			while (reader.Read())
+			{
+                userPayments.Add(new paymentModel()
+                {
+					paymentDate = reader.GetDateTime(0),
+					reservationID = reader.GetInt32(1),
+					id = reader.GetInt32(2),
+					stripeID = reader.GetString(3),
+					summary = reader.GetString(4),
+					tax = reader.GetDecimal(5),
+					total = reader.GetDecimal(6)
+				});
+			}
+			return userPayments;
+
+		}
+
         public void AddPayment(decimal total, decimal tax, string summary, string stripeCode, int reservationID)
         {
             using var conn = new SqlConnection(_connectionString);

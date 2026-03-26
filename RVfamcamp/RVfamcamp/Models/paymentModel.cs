@@ -11,10 +11,14 @@ namespace RVfamcamp.Models
 
 		public string stripeID { get; set; }
 
+		public int reservationID { get; set; }
+
 		public decimal total {  get; set; }
 
 		public DateTime paymentDate { get; set; }
 
 		public string summary { get; set; }
+
+		public decimal tax { get; set; }
 	}
 }

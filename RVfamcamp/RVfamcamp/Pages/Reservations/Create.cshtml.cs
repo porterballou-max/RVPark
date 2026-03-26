@@ -105,8 +105,8 @@ public class CreateModel(DatabaseStatements db) : PageModel
             db.UpdateLotOccupancy(lotID, true);
         }
 
-        return RedirectToPage("Index");
-    }
+		return RedirectToPage("/payments/makePayment", new { resID = resID });
+	}
 
 
 }
