@@ -80,6 +80,21 @@ namespace RVfamcamp.Controllers
 				toAdd.summary = GeneratePaymentSummary(session);
 				toAdd.paymentDate = session.Created;
 				toAdd.stripeID = session.Id;
+				string? reservationIdString = null;
+
+				if (session.Metadata != null &&
+					session.Metadata.TryGetValue("reservationId", out var strResID))
+				{
+					reservationIdString = strResID;
+				}
+				if (int.TryParse(reservationIdString, out int reservationId))
+				{
+					toAdd.reservationID = reservationId;
+				}
+				else
+				{
+					// Handle error
+				}
 
 				if (_payments.addPayment(toAdd))
 				{
@@ -99,54 +114,54 @@ namespace RVfamcamp.Controllers
 
 		private static string GeneratePaymentSummary(Session session)
 		{
-			var summary = new StringBuilder();
-
 			long amountCents = session.AmountTotal ?? 0;
 			decimal amountDollars = amountCents / 100m;
 
-			summary.Append("Stripe checkout completed");
+			var parts = new List<string>();
+
+			// Core info (never removed)
+			parts.Add("Stripe checkout");
 
 			if (!string.IsNullOrWhiteSpace(session.PaymentStatus))
-			{
-				summary.Append($" | Status: {session.PaymentStatus}");
-			}
+				parts.Add($"Status: {session.PaymentStatus}");
 
-			summary.Append($" | Amount: {amountDollars:0.00}");
-
-			if (!string.IsNullOrWhiteSpace(session.Currency))
-			{
-				summary.Append($" {session.Currency.ToUpper()}");
-			}
+			parts.Add($"Amount: {amountDollars:0.00} {(session.Currency ?? "usd").ToUpper()}");
 
 			if (!string.IsNullOrWhiteSpace(session.Id))
-			{
-				summary.Append($" | Session: {session.Id}");
-			}
+				parts.Add($"Session: {session.Id}");
 
 			if (!string.IsNullOrWhiteSpace(session.PaymentIntentId))
-			{
-				summary.Append($" | PaymentIntent: {session.PaymentIntentId}");
-			}
+				parts.Add($"PI: {session.PaymentIntentId}");
 
+			// Secondary info (only include if space allows)
 			if (!string.IsNullOrWhiteSpace(session.ClientReferenceId))
+				parts.Add($"Ref: {session.ClientReferenceId}");
+
+			if (session.CustomerDetails != null &&
+				!string.IsNullOrWhiteSpace(session.CustomerDetails.Email))
 			{
-				summary.Append($" | Ref: {session.ClientReferenceId}");
+				parts.Add($"Email: {session.CustomerDetails.Email}");
 			}
 
-			if (session.CustomerDetails != null && !string.IsNullOrWhiteSpace(session.CustomerDetails.Email))
+			// Build safely within 255
+			return JoinWithLimit(parts, 255);
+		}
+
+		private static string JoinWithLimit(List<string> parts, int maxLength)
+		{
+			var result = parts[0]; // always include first
+
+			for (int i = 1; i < parts.Count; i++)
 			{
-				summary.Append($" | Email: {session.CustomerDetails.Email}");
+				string next = result + " | " + parts[i];
+
+				if (next.Length > maxLength)
+					break;
+
+				result = next;
 			}
 
-			if (session.Metadata != null && session.Metadata.Count > 0)
-			{
-				foreach (var pair in session.Metadata)
-				{
-					summary.Append($" | {pair.Key}: {pair.Value}");
-				}
-			}
-
-			return summary.ToString();
+			return result;
 		}
 	}
 }

@@ -15,6 +15,9 @@ builder.Services.Configure<AppSettings>(
 	builder.Configuration.GetSection("App")
 );
 
+builder.Services.Configure<PricingSettings>(
+	builder.Configuration.GetSection("PricingSettings"));
+
 builder.Services.AddScoped<StripeService>();
 builder.Services.AddScoped<PaymentRepo>();
 // Add services to the container.
@@ -52,6 +55,8 @@ var stripeSettings =
 	builder.Configuration.GetSection("Stripe").Get<StripeSettings>();
 
 var appSettings = builder.Configuration.GetSection("app").Get<AppSettings>();
+
+var pricingSettings = builder.Configuration.GetSection("PricingSettings").Get<PricingSettings>();
 
 StripeConfiguration.ApiKey = stripeSettings.SecretKey;
 

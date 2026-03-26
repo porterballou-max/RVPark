@@ -5,8 +5,11 @@ namespace RVfamcamp.Pages.Payments
 {
     public class CancelationModel : PageModel
     {
-        public void OnGet()
+        public int reservationId { get; set; }
+
+		public void OnGet(int resId)
         {
+            reservationId = resId;
         }
     }
 }

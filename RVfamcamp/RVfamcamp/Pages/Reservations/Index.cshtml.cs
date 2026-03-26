@@ -26,6 +26,8 @@ public class ReservationsIndexModel(DatabaseStatements db) : PageModel
             if (userID != -1)
             {
                 Reservations = db.GetUsersReservations(userID);
+                foreach (var reservation in Reservations)
+                    reservation.isPayed = db.IsReservationPaid(reservation.reservationId); 
             }
         }
         else
@@ -42,6 +44,8 @@ public class Reservation
     public DateTime startDate { get; set; }
     public DateTime endDate { get; set; }
     public int confirmationNumber { get; set; }
+
+    public bool isPayed { get; set; }
 
 }
 
