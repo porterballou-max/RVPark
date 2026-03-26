@@ -59,6 +59,11 @@ namespace RVfamcamp.Pages
 
             if (user != null)
             {
+                if (user.Role == "Locked")
+                {
+                    ModelState.AddModelError(string.Empty, "This account has been disabled. Please contact an administrator.");
+                    return Page();
+                }
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.NameIdentifier, user.UserAccountId.ToString()),

@@ -10,7 +10,10 @@ namespace RVfamcamp.Pages
     public class ReportsModel : PageModel
     {
         private readonly DatabaseStatements _db;
-        public ReportsModel(DatabaseStatements db) => _db = db;
+        public ReportsModel(DatabaseStatements db)
+        {
+            _db = db;
+        }
 
         [BindProperty]
         [DataType(DataType.Date)]
