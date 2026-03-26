@@ -318,21 +318,21 @@ namespace RVfamcamp.Services
         }
 
         // DELETE: Reservation 
-        public void RemoveReservationById(Reservation reservation)
+        public void RemoveReservationById(int reservationId)
         {
             using var conn = new SqlConnection(_connectionString);
             
             // Delete entry in vehicle reservation if it exists. 
             var cmdDelVehicleRegistration =
-                new SqlCommand("DELETE FROM VehicleReservation vr WHERE vr.reservationID == @reservationId", conn);
-            cmdDelVehicleRegistration.Parameters.AddWithValue("@reservationId", reservation.reservationId);
+                new SqlCommand("DELETE FROM VehicleReservation WHERE reservationID = @reservationId", conn);
+            cmdDelVehicleRegistration.Parameters.AddWithValue("@reservationId", reservationId);
             conn.Open();
             cmdDelVehicleRegistration.ExecuteNonQuery();
             conn.Close();
             
             // Delete reservation. 
             var cmd = new SqlCommand("DELETE FROM Reservation WHERE ReservationID = @reservationID", conn);
-            cmd.Parameters.AddWithValue("@reservationID", reservation.reservationId);
+            cmd.Parameters.AddWithValue("@reservationID", reservationId);
             conn.Open();
             cmd.ExecuteNonQuery();
             conn.Close();

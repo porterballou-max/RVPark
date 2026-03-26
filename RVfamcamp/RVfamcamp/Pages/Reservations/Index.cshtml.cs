@@ -1,8 +1,9 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System;
-using System.Collections.Generic;
 using RVfamcamp.Models;
 using RVfamcamp.Services;
+using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Security.Claims;
 
@@ -31,7 +32,7 @@ public class ReservationsIndexModel(DatabaseStatements db) : PageModel
         {
             Message = "Please click 'Create Reservation' to make a reservation.";
         }
-    } 
+    }
 }
 
 // Reservations class

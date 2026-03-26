@@ -7,7 +7,8 @@ using System;
 public class DetailsModel(DatabaseStatements db) : PageModel
 {
     public required Reservation Reservation { get; set; }
-    public List<Lot>? Lots { get; set; }
+    public List<Lot>? lots { get; set; }
+    public List<LotType>? lotTypes { get; set; }
     public int ReservationId { get; set; }
 
     public void OnGet(int id)
@@ -18,8 +19,12 @@ public class DetailsModel(DatabaseStatements db) : PageModel
         Reservation = db.GetReservationById(id);
 
         // Get all lots associated with reservation
-        Lots = db.GetLotsByReservationId(id);
+        lots = db.GetLotsByReservationId(id);
 
-            
+        // Get lot types associated with lots
+        lotTypes = (List<LotType>?)db.GetAllLotTypes();
+
+
+
     }
 }
