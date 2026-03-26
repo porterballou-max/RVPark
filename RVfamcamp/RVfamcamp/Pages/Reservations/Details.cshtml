@@ -9,9 +9,69 @@
 <div class="card p-3">
     <p><strong>Check-In:</strong> @Model.Reservation.startDate.ToShortDateString()</p>
     <p><strong>Check-Out:</strong> @Model.Reservation.endDate.ToShortDateString()</p>
-    <p><strong>Guests:</strong> @Model.Reservation.confirmationNumber>
+    <p><strong>Confirmation Number:</strong> @Model.Reservation.confirmationNumber</p>
 
 </div>
 
+@if (Model.lots != null && Model.lots.Count > 0)
+{
+    <h4>Available Lots</h4>
+
+   
+    var lotTypeDict = Model.lotTypes?
+        .ToDictionary(t => t.LotTypeID);
+
+    <div class="lot-grid">
+        @foreach (var lot in Model.lots)
+        {
+            var lotType = lotTypeDict != null && lotTypeDict.ContainsKey(lot.LotType)
+                ? lotTypeDict[lot.LotType]
+                : null;
+
+            <div class="lot-card-static">
+                <h5>Lot @lot.LotId</h5>
+
+                <span class="badge bg-info">
+                    @(lotType?.TypeName ?? "Unknown")
+                </span>
+
+                <p>
+                    <strong>Price:</strong>
+                    @(lotType != null ? $"${lotType.BasePrice} / night" : "N/A")
+                </p>
+
+                <p>
+                    <strong>Size:</strong>
+                    @(lotType?.LotSize)
+                </p>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <p>No lots available.</p>
+}
+
 <a asp-page="Edit" asp-route-id="@Model.Reservation.reservationId" class="btn btn-success mt-3">Edit</a>
 <a asp-page="Index" class="btn btn-secondary mt-3">Back</a>
+
+<style>
+    .lot-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 15px;
+    }
+
+    .lot-card-static {
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        transition: 0.2s;
+    }
+
+        .lot-card-static:hover {
+            transform: scale(1.02);
+        }
+</style>

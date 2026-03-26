@@ -1,0 +1,79 @@
+﻿@page
+@model AdminToolsModel
+<h2>Employee Management</h2>
+
+<table class="table table-hover mt-4">
+    <thead class="table-dark">
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Current Role</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model.Users)
+        {
+            <tr>
+                <td>@user.FirstName @user.LastName</td>
+                <td>@user.Email</td>
+                <td>
+                    <span class="badge @(user.Role == "Locked" ? "bg-danger" : "bg-info")">
+                        @user.Role
+                    </span>
+                </td>
+                <td>
+                    <form method="post" asp-page-handler="UpdateRole" class="d-inline">
+                        <input type="hidden" name="id" value="@user.UserAccountId" />
+
+                        <button name="newRole" value="Employee" class="btn btn-sm btn-success">Make Employee</button>
+
+                        <button name="newRole" value="Admin" class="btn btn-sm btn-warning">Make Admin</button>
+
+                        <button name="newRole" value="Locked" class="btn btn-sm btn-danger">Lock Account</button>
+
+                        <button name="newRole" value="Client" class="btn btn-sm btn-secondary">Demote to Client</button>
+                    </form>
+                </td>
+            </tr>
+        }
+
+    </tbody>
+</table>
+<hr class="my-5" />
+
+<h3>Manage Lot Pricing</h3>
+<p class="text-muted">Adjust the base daily rate for different site types.</p>
+
+<div class="row">
+    <div class="col-md-8">
+        <table class="table table-sm align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Site Type</th>
+                    <th>Size (ft)</th>
+                    <th>Current Price</th>
+                    <th style="width: 250px;">New Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var type in Model.LotTypes)
+                {
+                    <tr>
+                        <td><strong>@type.TypeName</strong></td>
+                        <td>@type.LotSize</td>
+                        <td>@type.BasePrice.ToString("C")</td>
+                        <td>
+                            <form method="post" asp-page-handler="UpdatePrice" class="input-group">
+                                <input type="hidden" name="lotTypeId" value="@type.LotTypeID" />
+                                <span class="input-group-text">$</span>
+                                <input type="number" step="0.01" name="newPrice" class="form-control" placeholder="0.00" required />
+                                <button class="btn btn-outline-success" type="submit">Update</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

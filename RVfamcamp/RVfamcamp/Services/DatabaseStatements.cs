@@ -3,6 +3,7 @@ using Microsoft.Data.SqlClient;
 using RVfamcamp.Models;
 using RVPark.Models;
 using System.ComponentModel;
+using System.Data;
 using System.Diagnostics;
 using System.Security.Cryptography;
 
@@ -27,7 +28,7 @@ namespace RVfamcamp.Services
 
             using var conn = new SqlConnection(_connectionString);
 
-            var cmd = new SqlCommand("SELECT userAccountID, emailAddress FROM UserAccount", conn);
+            var cmd = new SqlCommand("SELECT userAccountID, firstName, lastName, emailAddress, role FROM UserAccount", conn);
 
             conn.Open();
             using SqlDataReader reader = cmd.ExecuteReader();
@@ -37,7 +38,10 @@ namespace RVfamcamp.Services
                 users.Add(new UserAccount
                 {
                     UserAccountId = reader.GetInt32(0),
-                    Email = reader.GetString(1),
+                    FirstName = reader.GetString(1),
+                    LastName = reader.GetString(2),
+                    Email = reader.GetString(3),
+                    Role = reader.GetString(4)
                 });
             }
 
@@ -151,6 +155,17 @@ namespace RVfamcamp.Services
             cmd.ExecuteNonQuery();
         }
 
+        public void UpdateUserRole(int userAccountId, string newRole)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("UPDATE UserAccount SET role = @Role WHERE userAccountID = @UserAccountID", conn);
+            cmd.Parameters.AddWithValue("@Role", newRole);
+            cmd.Parameters.AddWithValue("@UserAccountID", userAccountId);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
         /// <summary>
         /// Deletes a user from the database
         /// </summary>
@@ -220,20 +235,26 @@ namespace RVfamcamp.Services
         }
         
         // CREATE: Reservations
-        public void AddReservation(Reservation reservation)
+        public int AddReservation(Reservation reservation, int userAccountID)
         {
             
             using var conn = new SqlConnection(_connectionString);
             var cmd = new SqlCommand(
                 """
-                    INSERT INTO Reservation (StartDate, EndDate, ConfirmationNumber)
-                    VALUES (@startDate, @endDate, @confirmationNumber)
-                """);
+                    INSERT INTO Reservation (StartDate, EndDate, ConfirmationNumber, userAccountID)
+                    VALUES (@startDate, @endDate, @confirmationNumber, @userAccountID);
+                    SELECT SCOPE_IDENTITY();
+                """, conn);
             cmd.Parameters.AddWithValue("@startDate", reservation.startDate);
             cmd.Parameters.AddWithValue("@endDate", reservation.endDate);
             cmd.Parameters.AddWithValue("@confirmationNumber", reservation.confirmationNumber);
+            cmd.Parameters.AddWithValue("@userAccountID", userAccountID);
             conn.Open();
-            cmd.ExecuteNonQuery();
+            var result = cmd.ExecuteScalar();
+
+            return Convert.ToInt32(result);
+
+
         }
         
         // READ: Reservations
@@ -272,6 +293,7 @@ namespace RVfamcamp.Services
             }
             else
             {
+                reader.Read();
                 return new Reservation
                 {
                     reservationId = reader.GetInt32(0),
@@ -311,21 +333,21 @@ namespace RVfamcamp.Services
         }
 
         // DELETE: Reservation 
-        public void RemoveReservationById(Reservation reservation)
+        public void RemoveReservationById(int reservationId)
         {
             using var conn = new SqlConnection(_connectionString);
             
             // Delete entry in vehicle reservation if it exists. 
             var cmdDelVehicleRegistration =
-                new SqlCommand("DELETE FROM VehicleReservation vr WHERE vr.reservationID == @reservationId");
-            cmdDelVehicleRegistration.Parameters.AddWithValue("@reservationId", reservation.reservationId);
+                new SqlCommand("DELETE FROM VehicleReservation WHERE reservationID = @reservationId", conn);
+            cmdDelVehicleRegistration.Parameters.AddWithValue("@reservationId", reservationId);
             conn.Open();
             cmdDelVehicleRegistration.ExecuteNonQuery();
             conn.Close();
             
             // Delete reservation. 
             var cmd = new SqlCommand("DELETE FROM Reservation WHERE ReservationID = @reservationID", conn);
-            cmd.Parameters.AddWithValue("@reservationID", reservation.reservationId);
+            cmd.Parameters.AddWithValue("@reservationID", reservationId);
             conn.Open();
             cmd.ExecuteNonQuery();
             conn.Close();
@@ -338,7 +360,7 @@ namespace RVfamcamp.Services
             using var conn = new SqlConnection(_connectionString);
 
             // We join LotReservation (the link) to Lot (the data)
-            var cmd = new SqlCommand(@"SELECT l.lotID, l.lotNumber, l.lotType, l.isOccupied 
+            var cmd = new SqlCommand(@"SELECT l.lotID, l.lotType, l.isOccupied 
                    FROM Lot l
                    JOIN LotReservation lr ON l.lotID = lr.lotID
                    WHERE lr.reservationID = @ResrvationID", conn);
@@ -352,9 +374,8 @@ namespace RVfamcamp.Services
                 lots.Add(new Lot
                 {
                     LotId = reader.GetInt32(0),
-                    LotNumber = reader.GetInt32(1),
-                    LotType = reader.GetInt32(2),
-                    IsOccupied = reader.GetBoolean(3)
+                    LotType = reader.GetInt32(1),
+                    IsOccupied = reader.GetBoolean(2)
                 });
             }
             return lots;
@@ -371,7 +392,7 @@ namespace RVfamcamp.Services
                 """
                 SELECT ReservationID, StartDate, EndDate, ConfirmationNumber FROM Reservation
                 WHERE CAST(startDate AS DATE) = @ArrivalDate
-                """
+                """, conn
             );
             cmd.Parameters.AddWithValue("@ArrivalDate", date);            
             
@@ -405,7 +426,7 @@ namespace RVfamcamp.Services
                 """
                 SELECT ReservationID, StartDate, EndDate, ConfirmationNumber FROM Reservation
                 WHERE CAST(endDate AS DATE) = @DepartureDate
-                """
+                """, conn
             );
             cmd.Parameters.AddWithValue("@DepartureDate", date);            
             
@@ -453,21 +474,21 @@ namespace RVfamcamp.Services
                 INNER JOIN Lot l
                 ON l.lotID = lr.LotID
                 WHERE CAST(r.startDate AS DATE) > @endDate OR CAST(r.endDate AS DATE) < @startDate
-                """
+                """, conn
             );
             cmd.Parameters.AddWithValue("@startDate", start);
             cmd.Parameters.AddWithValue("@endDate", end);
             
             conn.Open();
             
-            using SqlDataReader reader = cmd.ExecuteReader();
+            using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
                 lots.Add(new Lot
                 {
                     LotId = reader.GetInt32(0),
                     IsOccupied = reader.GetBoolean(1),
-                    LotType = reader.GetInt32(2),
+                    LotType = reader.GetInt32(2)
                 });
             }
 
@@ -779,6 +800,51 @@ namespace RVfamcamp.Services
             cmd.ExecuteNonQuery();
         }
 
+        public List<Lot> GetVacantLots(DateOnly startDate, DateOnly endDate)
+        {
+            List<Lot> lots = new List<Lot>();
+
+            using var conn = new SqlConnection(_connectionString);
+
+            using var cmd = new SqlCommand(
+                """
+                SELECT l.LotId, l.IsOccupied, l.LotType
+                FROM Lot l
+                WHERE l.IsOccupied = 0
+                AND l.LotId NOT IN (
+                    SELECT lr.LotId
+                    FROM LotReservation lr
+                    JOIN Reservation r ON lr.ReservationId = r.ReservationID
+                    WHERE NOT (
+                        r.EndDate <= @StartDate OR r.StartDate >= @EndDate
+                    )
+                )
+                """, conn);
+
+            cmd.Parameters.Add("@StartDate", SqlDbType.Date)
+                .Value = startDate.ToDateTime(TimeOnly.MinValue);
+
+            cmd.Parameters.Add("@EndDate", SqlDbType.Date)
+                .Value = endDate.ToDateTime(TimeOnly.MinValue);
+
+            conn.Open();
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                lots.Add(new Lot
+                {
+                    LotId = reader.GetInt32(0),
+                    IsOccupied = reader.GetBoolean(1),
+                    LotType = reader.GetInt32(2)
+                });
+            }
+
+            return lots;
+
+        }
+
+
         // *****************
         // Report
         // *****************
@@ -890,6 +956,71 @@ namespace RVfamcamp.Services
             cmd.ExecuteNonQuery();
         }
 
+
+
+        // *****************
+        // LotType
+        // *****************
+        public LotType? GetLotTypeByLotNumber(int lotNumber)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            // Joining Lot and LotType to get the full pricing details for a specific site
+            var cmd = new SqlCommand(@"SELECT lt.lotType, lt.typeName, lt.basePrice, lt.lotSize 
+                FROM LotType lt
+                JOIN Lot l ON lt.lotType = l.lotType
+                WHERE l.lotNumber = @LotNum", conn);
+
+            cmd.Parameters.AddWithValue("@LotNum", lotNumber);
+
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                return new LotType
+                {
+                    LotTypeID = reader.GetInt32(0),
+                    TypeName = reader.GetString(1),
+                    BasePrice = reader.GetDecimal(2),
+                    LotSize = reader.GetInt32(3)
+                };
+            }
+            return null;
+        }
+
+
+        public List<LotType> GetAllLotTypes()
+        {
+            var lotTypes = new List<LotType>();
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("SELECT lotType, typeName, basePrice, lotSize FROM LotType", conn);
+
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                lotTypes.Add(new LotType
+                {
+                    LotTypeID = reader.GetInt32(0),
+                    TypeName = reader.GetString(1),
+                    BasePrice = reader.GetDecimal(2),
+                    LotSize = reader.GetInt32(3)
+                });
+            }
+            return lotTypes;
+        }
+
+        public bool UpdateLotTypeBasePrice(int lotTypeId, decimal newPrice)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("UPDATE LotType SET basePrice = @Price WHERE lotType = @ID", conn);
+
+
+            cmd.Parameters.AddWithValue("@Price", newPrice);
+            cmd.Parameters.AddWithValue("@ID", lotTypeId);
+
+            conn.Open();
+            return cmd.ExecuteNonQuery() > 0;
+        }
     }
 
 }

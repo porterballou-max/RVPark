@@ -1,0 +1,15 @@
+﻿@page
+@model RVfamcamp.Pages.Reservations.DeleteModel
+@{
+}
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-info">
+        @TempData["Message"]
+    </div>
+}
+
+<a asp-page="Index" class="btn btn-primary">
+    Back
+</a>
+
