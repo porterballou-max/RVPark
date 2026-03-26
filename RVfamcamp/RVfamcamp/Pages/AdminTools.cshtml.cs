@@ -16,15 +16,23 @@ public class AdminToolsModel : PageModel
     }
 
     public List<UserAccount> Users { get; set; } = new();
+    public List<LotType> LotTypes { get; set; } = new();
 
     public void OnGet()
     {
         Users = _db.GetAllUsers();
+        LotTypes = _db.GetAllLotTypes();
     }
 
     public IActionResult OnPostUpdateRole(int id, string newRole)
     {
         _db.UpdateUserRole(id, newRole);
+        return RedirectToPage();
+    }
+
+    public IActionResult OnPostUpdatePrice(int lotTypeId, decimal newPrice)
+    {
+        _db.UpdateLotTypeBasePrice(lotTypeId, newPrice);
         return RedirectToPage();
     }
 }

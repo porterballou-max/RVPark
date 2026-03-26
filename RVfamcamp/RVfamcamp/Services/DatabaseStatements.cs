@@ -818,6 +818,70 @@ namespace RVfamcamp.Services
             cmd.ExecuteNonQuery();
         }
 
+        // *****************
+        // LotType
+        // *****************
+        public LotType? GetLotTypeByLotNumber(int lotNumber)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            // Joining Lot and LotType to get the full pricing details for a specific site
+            var cmd = new SqlCommand(@"SELECT lt.lotType, lt.typeName, lt.basePrice, lt.lotSize 
+                FROM LotType lt
+                JOIN Lot l ON lt.lotType = l.lotType
+                WHERE l.lotNumber = @LotNum", conn);
+
+            cmd.Parameters.AddWithValue("@LotNum", lotNumber);
+
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                return new LotType
+                {
+                    LotTypeID = reader.GetInt32(0),
+                    TypeName = reader.GetString(1),
+                    BasePrice = reader.GetDecimal(2),
+                    LotSize = reader.GetInt32(3)
+                };
+            }
+            return null;
+        }
+
+
+        public List<LotType> GetAllLotTypes()
+        {
+            var lotTypes = new List<LotType>();
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("SELECT lotType, typeName, basePrice, lotSize FROM LotType", conn);
+
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                lotTypes.Add(new LotType
+                {
+                    LotTypeID = reader.GetInt32(0),
+                    TypeName = reader.GetString(1),
+                    BasePrice = reader.GetDecimal(2),
+                    LotSize = reader.GetInt32(3)
+                });
+            }
+            return lotTypes;
+        }
+
+        public bool UpdateLotTypeBasePrice(int lotTypeId, decimal newPrice)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("UPDATE LotType SET basePrice = @Price WHERE lotType = @ID", conn);
+
+
+            cmd.Parameters.AddWithValue("@Price", newPrice);
+            cmd.Parameters.AddWithValue("@ID", lotTypeId);
+
+            conn.Open();
+            return cmd.ExecuteNonQuery() > 0;
+        }
+
     }
 
 }
