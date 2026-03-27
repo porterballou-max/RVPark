@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging.Configuration;
 using RVfamcamp.Models;
 using RVPark.Models;
 using System.ComponentModel;
@@ -775,6 +776,32 @@ namespace RVfamcamp.Services
         // *****************
         // Lot
         // *****************
+
+        public List<Lot> getLots()
+        {
+            List<Lot> lots = new List<Lot>(); 
+
+            using var conn = new SqlConnection(_connectionString);
+
+            var cmd = new SqlCommand("SELECT LotId, IsOccupied, LotType FROM Lot", conn);
+
+            conn.Open();
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                lots.Add(new Lot
+                {
+                    LotId = reader.GetInt32(0),
+                    IsOccupied = reader.GetBoolean(1),
+                    LotType = reader.GetInt32(2)
+                });
+            }
+
+            return lots;
+
+
+        }
         public int getLotID(int lotNumber)
         {
             using var conn = new SqlConnection(_connectionString);
