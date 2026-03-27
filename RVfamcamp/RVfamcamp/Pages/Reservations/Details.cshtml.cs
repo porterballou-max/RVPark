@@ -13,27 +13,16 @@ public class DetailsModel(DatabaseStatements db) : PageModel
 
     public void OnGet(int id)
     {
-        //ReservationId = id;
+        ReservationId = id;
 
-        //// Get reservation information
-        //Reservation = db.GetReservationById(id);
+        // Get reservation information
+        Reservation = db.GetReservationById(id);
 
-        //// Get all lots associated with reservation
-        ////lots = db.GetLotsByReservationId(id);
+        // Get all lots associated with reservation
+        lots = db.GetLotsByReservationId(id);
 
-        //// Get lot types associated with lots
-        //lotTypes = (List<LotType>?)db.GetAllLotTypes();
-
-        // Get all lots associated with res and update isoccupied
-        List<Lot> lots = new List<Lot>();
-        //lots = db.GetLotsByReservationId(id); HOTFIX just reseting the lots avialibilty
-        lots = db.getLots();
-        foreach (var lot in lots)
-        {
-            db.UpdateLotOccupancy(lot.LotId, false);
-        }
-
-
+        // Get lot types associated with lots
+        lotTypes = (List<LotType>?)db.GetAllLotTypes();
 
     }
 }
