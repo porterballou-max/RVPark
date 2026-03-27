@@ -12,13 +12,6 @@ public class EditModel(DatabaseStatements db) : PageModel
     public void OnGet(int id)
     {
         Reservation = db.GetReservationById(id);
-        List<Lot> lots = new List<Lot>();
-        lots = db.getLots();
-
-        foreach (var lot in lots)
-        {
-            db.UpdateLotOccupancy(lot.LotId, false);
-        }
     }
 
     public IActionResult OnPost()
