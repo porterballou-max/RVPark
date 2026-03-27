@@ -21,8 +21,8 @@ namespace RVfamcamp.Pages.Reservations
             {
                 // Get all lots associated with res and update isoccupied
                 List<Lot> lots = new List<Lot>();
-                //lots = db.GetLotsByReservationId(id); HOTFIX just reseting the lots avialibilty
-                lots = db.getLots();
+                lots = db.GetLotsByReservationId(id);
+
                 foreach (var lot in lots)
                 {
                     db.UpdateLotOccupancy(lot.LotId, false);
