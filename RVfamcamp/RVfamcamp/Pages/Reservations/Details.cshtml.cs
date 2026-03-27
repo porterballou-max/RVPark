@@ -24,7 +24,5 @@ public class DetailsModel(DatabaseStatements db) : PageModel
         // Get lot types associated with lots
         lotTypes = (List<LotType>?)db.GetAllLotTypes();
 
-
-
     }
 }

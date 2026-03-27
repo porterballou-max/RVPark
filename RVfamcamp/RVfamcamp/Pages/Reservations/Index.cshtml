@@ -32,7 +32,6 @@
                     <td>@r.confirmationNumber</td>
                     <td>
                         <a class="btn btn-sm btn-outline-primary" asp-page="/Reservations/Details" asp-route-id="@r.reservationId">View</a>
-                        <a class="btn btn-sm btn-outline-secondary" asp-page="/Reservations/Edit" asp-route-id="@r.reservationId">Edit</a>
                         <a class="btn btn-sm btn-outline-danger" asp-page="/Reservations/Delete" asp-route-id="@r.reservationId">Delete</a>
                         @if (!r.isPayed) {
                             <a class="btn btn-sm btn-outline-success" asp-page="/payments/makePayment" asp-route-resID="@r.reservationId">Pay</a>
