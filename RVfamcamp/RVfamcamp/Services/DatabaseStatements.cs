@@ -909,7 +909,7 @@ namespace RVfamcamp.Services
         {
 			using var conn = new SqlConnection(_connectionString);
 
-			var cmd = new SqlCommand("select p.paymentDate, p.reservationID, p.paymentsID, p.stripeCode, p.summary, p.taxAmount, p.total from Payments p\r\ninner join Reservation r on p.reservationID = r.reservationID\r\ninner join Client c on c.userAccountID = r.userAccountID\r\ninner join UserAccount ua on c.userAccountID = ua.userAccountID\r\nwhere ua.userAccountID = @userID", conn);
+			var cmd = new SqlCommand("select p.paymentDate, p.reservationID, p.paymentsID, p.stripeCode, p.summary, p.taxAmount, p.total from Payments p\r\ninner join Reservation r on p.reservationID = r.reservationID\r\ninner join UserAccount ua on r.userAccountID = ua.userAccountID\r\nwhere ua.userAccountID = @userID", conn);
 
 			cmd.Parameters.AddWithValue("@userID", userID);
             conn.Open();
