@@ -10,6 +10,8 @@ namespace RVfamcamp.Pages
         public async Task<IActionResult> OnPostAsync()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            TempData["Message"] = "You have successfully logged out.";
+            TempData["MessageType"] = "success";    
             return RedirectToPage("/Index");
         }
 
@@ -17,4 +19,4 @@ namespace RVfamcamp.Pages
         {
         }
     }
-}
+}   
