@@ -72,6 +72,24 @@ namespace RVfamcamp.Services
             return Convert.ToInt32(userID);
         }
 
+        // This method allows for a check if the email is already in use.
+        // Prevents a bug that would break the app if trying to register a new account with an email already in the system.
+
+        public bool EmailExists(string email)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            conn.Open();
+
+            var cmd = new SqlCommand(
+                "SELECT COUNT(1) FROM UserAccount WHERE Email = @Email",
+                conn
+            );
+
+            cmd.Parameters.AddWithValue("@Email", email);
+
+            return (int)cmd.ExecuteScalar() > 0;
+        }
+
         /// <summary>
         /// Registers a user into the database
         /// </summary>

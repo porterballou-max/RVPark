@@ -23,24 +23,43 @@ namespace RVfamcamp.Pages.Account
         }
 
         public IActionResult OnPost()
-        {
+        {   
             if (!ModelState.IsValid)
             {
                 return Page();
             }
 
-            // Call your DB service to register the user
-            _db.RegisterUser(
-                email: Input.Email,
-                password: Input.Password,
-                firstName: Input.FirstName,
-                lastName: Input.LastName,
-                role: "Client" // default role
-            );
+            // Pre-check for duplicate email
+            if (_db.EmailExists(Input.Email))
+            {
+                ModelState.AddModelError(string.Empty, "An account with this email already exists.");
+                return Page();
+            }
 
-            TempData["Success"] = "Account created successfully!";
+            try
+            {
+                _db.RegisterUser(
+                    email: Input.Email,
+                    password: Input.Password,
+                    firstName: Input.FirstName,
+                    lastName: Input.LastName,
+                    role: "Client"
+                );
 
-            return RedirectToPage("/Login");
+                TempData["Success"] = "Account created successfully!";
+                return RedirectToPage("/Login");
+            }
+            catch (SqlException ex)
+            {
+                // 🛑 Safety net in case duplicate still slips through (race condition)
+                if (ex.Message.Contains("AK_EmailAddress") || ex.Message.Contains("duplicate"))
+                {
+                    ModelState.AddModelError(string.Empty, "That email is already registered.");
+                    return Page();
+                }
+
+                throw; // unknown errors still surface for debugging
+            }
         }
     }
 }
