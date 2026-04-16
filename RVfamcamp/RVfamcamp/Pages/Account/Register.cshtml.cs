@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Data.SqlClient;
 using RVfamcamp.Models;
 using RVPark.Models;
 using RVfamcamp.Services; 
@@ -29,7 +30,6 @@ namespace RVfamcamp.Pages.Account
                 return Page();
             }
 
-            // Pre-check for duplicate email
             if (_db.EmailExists(Input.Email))
             {
                 ModelState.AddModelError(string.Empty, "An account with this email already exists.");
@@ -51,14 +51,13 @@ namespace RVfamcamp.Pages.Account
             }
             catch (SqlException ex)
             {
-                // 🛑 Safety net in case duplicate still slips through (race condition)
-                if (ex.Message.Contains("AK_EmailAddress") || ex.Message.Contains("duplicate"))
+                if (ex.Number == 2601 || ex.Number == 2627)
                 {
                     ModelState.AddModelError(string.Empty, "That email is already registered.");
                     return Page();
                 }
 
-                throw; // unknown errors still surface for debugging
+                throw;
             }
         }
     }

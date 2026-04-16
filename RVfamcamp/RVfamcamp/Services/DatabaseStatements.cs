@@ -81,7 +81,7 @@ namespace RVfamcamp.Services
             conn.Open();
 
             var cmd = new SqlCommand(
-                "SELECT COUNT(1) FROM UserAccount WHERE Email = @Email",
+                "SELECT COUNT(1) FROM UserAccount WHERE EmailAddress = @Email",
                 conn
             );
 
