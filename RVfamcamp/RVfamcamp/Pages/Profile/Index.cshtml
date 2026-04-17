@@ -4,6 +4,13 @@
     ViewData["Title"] = "Client Profile";
 }
 
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success text-center">
+        @TempData["Success"]
+    </div>
+}
+
 <div class="app-container">
 
     <!-- Main Content -->
@@ -21,6 +28,12 @@
             <p class="contact text-center mb-3"><i class="bi bi-envelope-fill"></i> @Model.Profile.Email</p>
 
             <div class="button-group d-flex justify-content-center gap-2 flex-wrap">
+                <!-- confirm email button goes here -->
+                <form method="post" asp-page-handler="ConfirmEmail">
+                    <button type="submit" class="btn btn-danger">
+                        Confirm Email
+                    </button>
+                </form>
                 <a asp-page="./Edit" class="btn btn-primary">Edit Personal Info</a>
                 <a asp-page="./Vehicle" class="btn btn-success">Edit Vehicles</a>
                 @* <a asp-page="./Payment" class="btn btn-danger">Edit Payment Info</a> *@
