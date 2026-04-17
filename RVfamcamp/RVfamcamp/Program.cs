@@ -46,6 +46,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 // Add SQL statements to whole project
 builder.Services.AddScoped<DatabaseStatements>();
 
+// SMTP Email Services - Currently connected to my weber account! - Rick
+builder.Services.AddScoped<EmailService>();
+
 
 // For database
 AppDomain.CurrentDomain.SetData("DataDirectory", Directory.GetCurrentDirectory());
