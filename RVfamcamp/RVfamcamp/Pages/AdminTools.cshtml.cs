@@ -18,9 +18,26 @@ public class AdminToolsModel : PageModel
     public List<UserAccount> Users { get; set; } = new();
     public List<LotType> LotTypes { get; set; } = new();
 
+    // BindProperty(SupportsGet = true) allows these to be set via the URL/Search bar
+    [BindProperty(SupportsGet = true)]
+    public string? UserSearch { get; set; }
+
+    [BindProperty(SupportsGet = true)]
+    public string? RoleFilter { get; set; }
+
     public void OnGet()
     {
-        Users = _db.GetAllUsers();
+        // Fetch all users, then filter them in memory (or update your SQL to filter)
+        var allUsers = _db.GetAllUsers();
+
+        Users = allUsers.Where(u =>
+            (string.IsNullOrEmpty(UserSearch) ||
+             u.FirstName.Contains(UserSearch, StringComparison.OrdinalIgnoreCase) ||
+             u.LastName.Contains(UserSearch, StringComparison.OrdinalIgnoreCase) ||
+             u.Email.Contains(UserSearch, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrEmpty(RoleFilter) || u.Role == RoleFilter)
+        ).ToList();
+
         LotTypes = _db.GetAllLotTypes();
     }
 
