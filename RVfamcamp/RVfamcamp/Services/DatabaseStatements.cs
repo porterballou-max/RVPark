@@ -903,9 +903,34 @@ namespace RVfamcamp.Services
             var lotID = cmd.ExecuteScalar();
 
             return Convert.ToInt32(lotID);
-        }
+		}
 
-        public List<paymentModel> getPaymentsByUserID(int userID)
+		public paymentModel getPayment(int id)
+		{
+			using var conn = new SqlConnection(_connectionString);
+
+			var cmd = new SqlCommand("select p.paymentDate, p.reservationID, p.paymentsID, p.stripeCode, p.summary, p.taxAmount, p.total from Payments p\r\ninner join Reservation r on p.reservationID = r.reservationID\r\ninner join UserAccount ua on r.userAccountID = ua.userAccountID\r\nwhere p.paymentsID = @paymentID", conn);
+
+			cmd.Parameters.AddWithValue("@paymentID", id);
+			conn.Open();
+
+			using var reader = cmd.ExecuteReader();
+			paymentModel payment = new paymentModel();
+
+			if (reader.Read())
+			{
+				payment.paymentDate = reader.GetDateTime(0);
+				payment.reservationID = reader.GetInt32(1);
+				payment.id = reader.GetInt32(2);
+				payment.stripeID = reader.GetString(3);
+				payment.summary = reader.GetString(4);
+				payment.tax = reader.GetDecimal(5);
+				payment.total = reader.GetDecimal(6);
+			}
+			return payment;
+		}
+
+		public List<paymentModel> getPaymentsByUserID(int userID)
         {
 			using var conn = new SqlConnection(_connectionString);
 
@@ -931,10 +956,45 @@ namespace RVfamcamp.Services
 				});
 			}
 			return userPayments;
-
 		}
 
-        public void AddPayment(decimal total, decimal tax, string summary, string stripeCode, int reservationID)
+		public paymentModel getPaymentByStripeID(string stripeID)
+		{
+			using var conn = new SqlConnection(_connectionString);
+
+			var cmd = new SqlCommand("select p.paymentDate, p.reservationID, p.paymentsID, p.stripeCode, p.summary, p.taxAmount, p.total from Payments p\r\ninner join Reservation r on p.reservationID = r.reservationID\r\ninner join UserAccount ua on r.userAccountID = ua.userAccountID\r\nwhere p.stripeCode = @stripeID", conn);
+
+			cmd.Parameters.AddWithValue("@stripeID", stripeID);
+			conn.Open();
+
+			using var reader = cmd.ExecuteReader();
+            paymentModel payment = new paymentModel();
+
+			if (reader.Read())
+			{
+					payment.paymentDate = reader.GetDateTime(0);
+					payment.reservationID = reader.GetInt32(1);
+					payment.id = reader.GetInt32(2);
+					payment.stripeID = reader.GetString(3);
+					payment.summary = reader.GetString(4);
+					payment.tax = reader.GetDecimal(5);
+                    payment.total = reader.GetDecimal(6);
+			}
+			return payment;
+		}
+
+		public void updatePaymentSummaryWithRefund(string checkoutSessionId, string refundId, decimal refundAmount, string refundStatus)
+        {
+			using var conn = new SqlConnection(_connectionString);
+			var cmd = new SqlCommand("UPDATE Payments SET summary = @summary WHERE stripeCode = @stripeID", conn);
+            var curSummary = getPaymentByStripeID(checkoutSessionId).summary;
+			cmd.Parameters.AddWithValue("@stripeID", checkoutSessionId);
+			cmd.Parameters.AddWithValue("@summary", curSummary + $"\nPayment Refunded! Refund ID: {refundId}, Refund Amount: {refundAmount}, Status: {refundStatus}");
+			conn.Open();
+			cmd.ExecuteNonQuery();
+        }
+
+		public void AddPayment(decimal total, decimal tax, string summary, string stripeCode, int reservationID)
         {
             using var conn = new SqlConnection(_connectionString);
             var cmd = new SqlCommand("INSERT INTO Payments (total, taxAmount, paymentDate, summary, stripeCode, reservationID) VALUES (@Total, @Tax, GETDATE(), @Summary, @Stripe, @ReservationID)", conn);
