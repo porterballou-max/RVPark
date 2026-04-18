@@ -10,12 +10,12 @@
 
     <form method="post">
         
-        @if (ViewBag.Error != null)
+        @if (!ViewData.ModelState.IsValid)
         {
             <div class="alert alert-danger">
-                @ViewBag.Error
+                <div asp-validation-summary="ModelOnly"></div>
             </div>
-		}
+        }
         <div class="mb-3">
             <label asp-for="Input.Email" class="form-label">Email</label>
             <input asp-for="Input.Email" type="email" class="form-control" placeholder="Enter email" required autofocus />

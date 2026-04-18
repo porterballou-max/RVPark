@@ -49,13 +49,23 @@
 
                     <h5>Lot @lot.LotId</h5>
 
-                    <span class="badge bg-info">
+                    @{
+                        var badgeClass = lotType?.TypeName switch
+                        {
+                            "Small" => "bg-primary",
+                            "Medium" => "bg-warning text-dark",
+                            "Large" => "bg-danger",
+                            _ => "bg-secondary"
+                        };
+                    }
+
+                    <span class="badge @badgeClass">
                         @(lotType?.TypeName ?? "Unknown")
                     </span>
 
                     <p>
                         <strong>Price:</strong>
-                        @(lotType != null ? $"${lotType.BasePrice} / night" : "N/A")
+                        @(lotType != null ? $"${lotType.BasePrice:F2} / night" : "N/A")
                     </p>
 
                     <p>
