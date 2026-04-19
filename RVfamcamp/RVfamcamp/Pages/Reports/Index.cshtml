@@ -4,6 +4,37 @@
     ViewData["Title"] = "Park Reports";
 }
 
+<style>
+    @@media print {
+        nav, footer, .btn, form, hr {
+            display: none !important;
+        }
+        .container {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .card {
+            border: 1px solid #dee2e6 !important;
+            box-shadow: none !important;
+            margin-bottom: 20px !important;
+            page-break-inside: avoid;
+        }
+        body {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            background-color: white !important;
+        }
+
+        h2 {
+            font-size: 24pt;
+            margin-bottom: 10px;
+        }
+    }
+</style>
+
 <div class="container mt-4">
     <h2>RV Park Reports</h2>
     <hr />
@@ -19,6 +50,11 @@
         </div>
         <div class="col-md-4">
             <button type="submit" class="btn btn-primary w-100">Generate Reports</button>
+        </div>
+        <div class="col-md-3">
+            <button type="button" onclick="window.print();" class="btn btn-outline-danger w-100">
+                <i class="bi bi-printer"></i> Print to PDF
+            </button>
         </div>
     </form>
 
