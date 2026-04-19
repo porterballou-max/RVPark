@@ -1,10 +1,17 @@
 ﻿@page
-@model RVfamcamp.Pages.Payments.RefundModel
+@model RVfamcamp.Pages.Payments.EditModel
 @{
     ViewData["Title"] = "Confirm Reservation Edit";
 }
 
 <h1>@ViewData["Title"]</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.errorMessage))
+{
+    <div class="alert alert-warning">
+        @Model.errorMessage
+    </div>
+}
 
 @if (Model.reservation == null)
 {
@@ -12,7 +19,7 @@
 }
 else
 {
-    <div class="card">
+    <div class="card mb-3">
         <div class="card-body">
             <h3 class="card-title">Reservation Summary</h3>
 
@@ -24,13 +31,11 @@ else
         </div>
     </div>
 
-    <br />
-
-    <div class="card">
+    <div class="card mb-3">
         <div class="card-body">
             <h3 class="card-title">Lots Included</h3>
 
-            @if (Model.lotLines.Count == 0)
+            @if (Model.lotLines == null || Model.lotLines.Count == 0)
             {
                 <p>No lots were found for this reservation.</p>
             }
@@ -59,40 +64,81 @@ else
         </div>
     </div>
 
-    <br />
-
-    <div class="card">
+    <div class="card mb-3">
         <div class="card-body">
             @if (Model.isRefund)
             {
                 <h3 class="card-title">Refund Summary</h3>
-                <p><strong>Original Total:</strong> @Model.originalTotal.ToString("C")</p>
-                <p><strong>Revised Subtotal:</strong> @Model.subtotal.ToString("C")</p>
-                <p><strong>Original Tax:</strong> @Model.originalTax.ToString("C")</p>
-                <p><strong>Revised Tax:</strong> @Model.tax.ToString("C")</p>
-                <p><strong>Total Refund:</strong> @Model.amountToProcess.ToString("C")</p>
-
-                <form method="post">
-                    <input type="hidden" asp-for="resID" />
-                    <button type="submit" class="btn btn-warning">
-                        Issue Refund @Model.amountToProcess.ToString("C")
-                    </button>
-                </form>
             }
             else
             {
                 <h3 class="card-title">Additional Charge Summary</h3>
-                <p><strong>Original Total:</strong> @Model.originalTotal.ToString("C")</p>
-                <p><strong>Revised Subtotal:</strong> @Model.subtotal.ToString("C")</p>
-                <p><strong>Revised Tax:</strong> @Model.tax.ToString("C")</p>
-                <p><strong>Total Due:</strong> @Model.amountToProcess.ToString("C")</p>
+            }
 
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <th>Original Subtotal</th>
+                        <td>@Model.originalSubtotal.ToString("C")</td>
+                    </tr>
+                    <tr>
+                        <th>Original Tax</th>
+                        <td>@Model.originalTax.ToString("C")</td>
+                    </tr>
+                    <tr>
+                        <th>Original Total</th>
+                        <td>@Model.originalTotal.ToString("C")</td>
+                    </tr>
+                    <tr>
+                        <th>Revised Subtotal</th>
+                        <td>@Model.subtotal.ToString("C")</td>
+                    </tr>
+                    <tr>
+                        <th>Revised Tax</th>
+                        <td>@Model.tax.ToString("C")</td>
+                    </tr>
+                    <tr>
+                        <th>Revised Total</th>
+                        <td>@Model.revisedTotal.ToString("C")</td>
+                    </tr>
+                    <tr>
+                        <th>Subtotal Difference</th>
+                        <td>@Model.deltaSubtotal.ToString("C")</td>
+                    </tr>
+                    <tr>
+                        <th>Tax Difference</th>
+                        <td>@Model.deltaTax.ToString("C")</td>
+                    </tr>
+                    <tr class="table-active">
+                        <th>
+                            @if (Model.isRefund)
+                            {
+                                <span>Total Refund</span>
+                            }
+                            else
+                            {
+                                <span>Total Due</span>
+                            }
+                        </th>
+                        <td><strong>@Model.total.ToString("C")</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            @if (Model.total > 0)
+            {
                 <form method="post">
                     <input type="hidden" asp-for="resID" />
-                    <button type="submit" class="btn btn-primary">
-                        Charge @Model.amountToProcess.ToString("C")
-                    </button>
-                </form>
+                    <button type="submit" class="btn @(Model.isRefund ? "btn-warning" : "btn-primary")">
+                        @(Model.isRefund
+                                        ? $"Issue Refund {Model.total.ToString("C")}"
+                                        : $"Charge {Model.total.ToString("C")}")
+            </button>
+        </form>
+                }
+            else
+            {
+                <p class="text-muted mb-0">No payment adjustment is needed.</p>
             }
         </div>
     </div>

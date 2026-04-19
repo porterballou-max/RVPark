@@ -119,7 +119,7 @@ namespace RVfamcamp.Pages.Payments
 			}
 			Console.WriteLine("Starting Refund");
 			var refundData = await _stripe.RefundFromCheckoutSessionAsync(db.getPayment(db.getPaymentIdByReservation(reservation.reservationId)).stripeID);
-			return RedirectToPage("Reservations/Delete", new {id = resID});
+			return RedirectToPage("/Reservations/Delete", new {id = resID});
 		}
 
 		private bool loadPaymentData(int reservationId)

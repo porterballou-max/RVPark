@@ -927,7 +927,7 @@ namespace RVfamcamp.Services
 		{
 			using var conn = new SqlConnection(_connectionString);
 
-			var cmd = new SqlCommand("select p.paymentDate, p.reservationID, p.paymentsID, p.stripeCode, p.summary, p.taxAmount, p.total from Payments p\r\ninner join Reservation r on p.reservationID = r.reservationID\r\ninner join UserAccount ua on r.userAccountID = ua.userAccountID\r\nwhere p.paymentsID = @paymentID", conn);
+			var cmd = new SqlCommand("select p.paymentDate, p.reservationID, p.paymentsID, p.stripeCode, p.summary, p.taxAmount, p.total, r.userAccountID from Payments p\r\ninner join Reservation r on p.reservationID = r.reservationID\r\ninner join UserAccount ua on r.userAccountID = ua.userAccountID\r\nwhere p.paymentsID = @paymentID", conn);
 
 			cmd.Parameters.AddWithValue("@paymentID", id);
 			conn.Open();
@@ -944,6 +944,7 @@ namespace RVfamcamp.Services
 				payment.summary = reader.GetString(4);
 				payment.tax = reader.GetDecimal(5);
 				payment.total = reader.GetDecimal(6);
+                payment.userID = reader.GetInt32(7);
 			}
 			return payment;
 		}
@@ -952,7 +953,7 @@ namespace RVfamcamp.Services
         {
 			using var conn = new SqlConnection(_connectionString);
 
-			var cmd = new SqlCommand("select p.paymentDate, p.reservationID, p.paymentsID, p.stripeCode, p.summary, p.taxAmount, p.total from Payments p\r\ninner join Reservation r on p.reservationID = r.reservationID\r\ninner join UserAccount ua on r.userAccountID = ua.userAccountID\r\nwhere ua.userAccountID = @userID", conn);
+			var cmd = new SqlCommand("select p.paymentDate, p.reservationID, p.paymentsID, p.stripeCode, p.summary, p.taxAmount, p.total, r.userAccountID from Payments p\r\ninner join Reservation r on p.reservationID = r.reservationID\r\ninner join UserAccount ua on r.userAccountID = ua.userAccountID\r\nwhere ua.userAccountID = @userID", conn);
 
 			cmd.Parameters.AddWithValue("@userID", userID);
             conn.Open();
@@ -970,7 +971,8 @@ namespace RVfamcamp.Services
 					stripeID = reader.GetString(3),
 					summary = reader.GetString(4),
 					tax = reader.GetDecimal(5),
-					total = reader.GetDecimal(6)
+					total = reader.GetDecimal(6),
+    				userID = reader.GetInt32(7)
 				});
 			}
 			return userPayments;
@@ -980,7 +982,7 @@ namespace RVfamcamp.Services
 		{
 			using var conn = new SqlConnection(_connectionString);
 
-			var cmd = new SqlCommand("select p.paymentDate, p.reservationID, p.paymentsID, p.stripeCode, p.summary, p.taxAmount, p.total from Payments p\r\ninner join Reservation r on p.reservationID = r.reservationID\r\ninner join UserAccount ua on r.userAccountID = ua.userAccountID\r\nwhere p.stripeCode = @stripeID", conn);
+			var cmd = new SqlCommand("select p.paymentDate, p.reservationID, p.paymentsID, p.stripeCode, p.summary, p.taxAmount, p.total, r.userAccountID from Payments p\r\ninner join Reservation r on p.reservationID = r.reservationID\r\ninner join UserAccount ua on r.userAccountID = ua.userAccountID\r\nwhere p.stripeCode = @stripeID", conn);
 
 			cmd.Parameters.AddWithValue("@stripeID", stripeID);
 			conn.Open();
@@ -990,13 +992,18 @@ namespace RVfamcamp.Services
 
 			if (reader.Read())
 			{
-					payment.paymentDate = reader.GetDateTime(0);
-					payment.reservationID = reader.GetInt32(1);
-					payment.id = reader.GetInt32(2);
-					payment.stripeID = reader.GetString(3);
-					payment.summary = reader.GetString(4);
-					payment.tax = reader.GetDecimal(5);
-                    payment.total = reader.GetDecimal(6);
+				Console.WriteLine($"Reader read good");
+				payment.paymentDate = reader.GetDateTime(0);
+				payment.reservationID = reader.GetInt32(1);
+				payment.id = reader.GetInt32(2);
+				payment.stripeID = reader.GetString(3);
+				payment.summary = reader.GetString(4);
+				payment.tax = reader.GetDecimal(5);
+                payment.total = reader.GetDecimal(6);
+                payment.userID = reader.GetInt32(7);
+			} else
+            {
+				Console.WriteLine($"Could not find payment for {stripeID}");
 			}
 			return payment;
 		}

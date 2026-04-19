@@ -93,11 +93,17 @@ namespace RVfamcamp.Services
 				Reason = "requested_by_customer"
 			};
 
-			// Leave Amount unset for full refund
+			// Only set Amount for a partial refund.
 			if (amountDollars.HasValue)
 			{
 				refundOptions.Amount = (long)(amountDollars.Value * 100m);
 			}
+
+			Console.WriteLine(
+				refundOptions.Amount.HasValue
+					? $"Refunding partial amount: {refundOptions.Amount.Value}"
+					: $"Refunding full amount for session {checkoutSessionId}"
+			);
 
 			var refundService = new RefundService();
 			return await refundService.CreateAsync(refundOptions);

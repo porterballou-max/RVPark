@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using RVfamcamp.Configuration;
 using RVfamcamp.Database;
 using RVfamcamp.Models;
+using RVfamcamp.Services;
 using Stripe;
 using Stripe.Checkout;
 using System.Text;
@@ -15,11 +16,15 @@ namespace RVfamcamp.Controllers
 	{
 		private readonly PaymentRepo _payments;
 		private readonly StripeSettings _config;
+		private readonly EmailService _email;
+		private readonly DatabaseStatements _db;
 
-		public StripeWebHookController(PaymentRepo payments, IOptions<StripeSettings> config)
+		public StripeWebHookController(PaymentRepo payments, IOptions<StripeSettings> config, EmailService email, DatabaseStatements db)
 		{
 			_payments = payments;
 			_config = config.Value;
+			_email = email;
+			_db = db;
 		}
 
 		[HttpPost("webhook")]
@@ -129,6 +134,8 @@ namespace RVfamcamp.Controllers
 
 			if (int.TryParse(session.ClientReferenceId, out int userId))
 				toAdd.userID = userId;
+			else
+				Console.WriteLine("Could not parse client reference id from the session");
 
 			if (session.Metadata != null &&
 				session.Metadata.TryGetValue("reservationId", out var strResID) &&
@@ -143,14 +150,96 @@ namespace RVfamcamp.Controllers
 
 			if (_payments.addPayment(toAdd))
 			{
-				Console.WriteLine("Payment added to DB.");
+				Console.WriteLine($"Payment added to DB. With client id = {toAdd.userID} and checkout session id: {session.Id}");
 			}
 			else
 			{
 				throw new Exception("Failed to save payment to database.");
 			}
 
-			await Task.CompletedTask;
+			var user = _db.GetUserById(userId);
+			var reservation = _db.GetReservationById(toAdd.reservationID);
+
+			string reservationHtml = "";
+			if (reservation != null)
+			{
+				reservationHtml = $@"
+			<tr>
+				<td style='padding: 8px; border: 1px solid #ddd;'><strong>Reservation ID</strong></td>
+				<td style='padding: 8px; border: 1px solid #ddd;'>{reservation.reservationId}</td>
+			</tr>
+			<tr>
+				<td style='padding: 8px; border: 1px solid #ddd;'><strong>Confirmation Number</strong></td>
+				<td style='padding: 8px; border: 1px solid #ddd;'>{reservation.confirmationNumber}</td>
+			</tr>
+			<tr>
+				<td style='padding: 8px; border: 1px solid #ddd;'><strong>Check-In</strong></td>
+				<td style='padding: 8px; border: 1px solid #ddd;'>{reservation.startDate:MMMM d, yyyy}</td>
+			</tr>
+			<tr>
+				<td style='padding: 8px; border: 1px solid #ddd;'><strong>Check-Out</strong></td>
+				<td style='padding: 8px; border: 1px solid #ddd;'>{reservation.endDate:MMMM d, yyyy}</td>
+			</tr>";
+			}
+
+			await _email.SendEmail(
+				user.Email,
+				"Payment Confirmation - RV Fam Camp",
+				$@"
+		<div style='font-family: Arial, Helvetica, sans-serif; background-color: #f7f7f7; padding: 24px;'>
+			<div style='max-width: 700px; margin: 0 auto; background-color: #ffffff; border: 1px solid #dddddd; border-radius: 8px; overflow: hidden;'>
+				<div style='background-color: #2f6f3e; color: white; padding: 20px 24px;'>
+					<h2 style='margin: 0;'>Payment Confirmation</h2>
+				</div>
+
+				<div style='padding: 24px; color: #333333;'>
+					<p style='margin-top: 0;'>Hello {user.FirstName},</p>
+
+					<p>
+						Thank you for your payment. This email confirms that we successfully received your payment for your RV Fam Camp reservation.
+					</p>
+
+					<table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
+						<tr>
+							<td style='padding: 8px; border: 1px solid #ddd;'><strong>Payment Date</strong></td>
+							<td style='padding: 8px; border: 1px solid #ddd;'>{toAdd.paymentDate:MMMM d, yyyy h:mm tt}</td>
+						</tr>
+						<tr>
+							<td style='padding: 8px; border: 1px solid #ddd;'><strong>Stripe Session ID</strong></td>
+							<td style='padding: 8px; border: 1px solid #ddd;'>{session.Id}</td>
+						</tr>
+						<tr>
+							<td style='padding: 8px; border: 1px solid #ddd;'><strong>Payment Status</strong></td>
+							<td style='padding: 8px; border: 1px solid #ddd;'>{session.PaymentStatus}</td>
+						</tr>
+						<tr>
+							<td style='padding: 8px; border: 1px solid #ddd;'><strong>Total Paid</strong></td>
+							<td style='padding: 8px; border: 1px solid #ddd;'>{toAdd.total.ToString("C")}</td>
+						</tr>
+						{reservationHtml}
+					</table>
+
+					<p>
+						You can keep this email for your records. If you need help with your reservation, please reference your confirmation number when contacting support.
+					</p>
+
+					<p style='margin-bottom: 24px;'>
+						View the site here:
+						<a href='https://cs3750-dusklabs-rvfamcamp-hba9fkevc6h2a4e4.centralus-01.azurewebsites.net/' target='_blank'>
+							RV Fam Camp
+						</a>
+					</p>
+
+					<hr style='border: none; border-top: 1px solid #dddddd; margin: 24px 0;' />
+
+					<p style='font-size: 12px; color: #777777; margin-bottom: 0;'>
+						Thank you,<br />
+						Dusk Labs - CS 3750 - Spring Semester 2026
+					</p>
+				</div>
+			</div>
+		</div>"
+			);
 		}
 
 		private async Task HandleRefundUpdatedAsync(Refund refund)
@@ -162,7 +251,10 @@ namespace RVfamcamp.Controllers
 			if (string.IsNullOrWhiteSpace(checkoutSessionId))
 				return;
 
+			Console.WriteLine($"Getting payment for checkout id: {checkoutSessionId}");
 			var original = _payments.getPaymentByStripeID(checkoutSessionId);
+			Console.WriteLine($"Found: {original.userID}");
+
 			if (original == null || original.id == 0)
 				return;
 
@@ -184,15 +276,107 @@ namespace RVfamcamp.Controllers
 				$"Amount: {refundAmount:0.00} {(refund.Currency ?? "usd").ToUpper()} | " +
 				$"Original Session: {checkoutSessionId}";
 
-			_payments.addPayment( new paymentModel {
-				total=refundTotal,
-				tax=refundTax,
-				summary=summary,
-				stripeID=refund.Id,
-				reservationID=original.reservationID,
-				userID=original.userID,
-				paymentDate=refundDate
+			_payments.addPayment(new paymentModel
+			{
+				total = refundTotal,
+				tax = refundTax,
+				summary = summary,
+				stripeID = refund.Id,
+				reservationID = original.reservationID,
+				userID = original.userID,
+				paymentDate = refundDate
 			});
+			Console.WriteLine($"USER: {original.userID}");
+			var user = _db.GetUserById(original.userID);
+			Console.WriteLine($"USER: {user == null}");
+			if (user != null)
+				Console.WriteLine($"USER: {user.FirstName}");
+			var reservation = _db.GetReservationById(original.reservationID);
+
+			string reservationHtml = "";
+			if (reservation != null)
+			{
+				reservationHtml = $@"
+			<tr>
+				<td style='padding: 8px; border: 1px solid #ddd;'><strong>Reservation ID</strong></td>
+				<td style='padding: 8px; border: 1px solid #ddd;'>{reservation.reservationId}</td>
+			</tr>
+			<tr>
+				<td style='padding: 8px; border: 1px solid #ddd;'><strong>Confirmation Number</strong></td>
+				<td style='padding: 8px; border: 1px solid #ddd;'>{reservation.confirmationNumber}</td>
+			</tr>
+			<tr>
+				<td style='padding: 8px; border: 1px solid #ddd;'><strong>Check-In</strong></td>
+				<td style='padding: 8px; border: 1px solid #ddd;'>{reservation.startDate:MMMM d, yyyy}</td>
+			</tr>
+			<tr>
+				<td style='padding: 8px; border: 1px solid #ddd;'><strong>Check-Out</strong></td>
+				<td style='padding: 8px; border: 1px solid #ddd;'>{reservation.endDate:MMMM d, yyyy}</td>
+			</tr>";
+			}
+
+			await _email.SendEmail(
+				user.Email,
+				"Refund Confirmation - RV Fam Camp",
+				$@"
+		<div style='font-family: Arial, Helvetica, sans-serif; background-color: #f7f7f7; padding: 24px;'>
+			<div style='max-width: 700px; margin: 0 auto; background-color: #ffffff; border: 1px solid #dddddd; border-radius: 8px; overflow: hidden;'>
+				<div style='background-color: #8b2e2e; color: white; padding: 20px 24px;'>
+					<h2 style='margin: 0;'>Refund Confirmation</h2>
+				</div>
+
+				<div style='padding: 24px; color: #333333;'>
+					<p style='margin-top: 0;'>Hello {user.FirstName},</p>
+
+					<p>
+						Your refund has been successfully processed for your RV Fam Camp reservation.
+					</p>
+
+					<table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
+						<tr>
+							<td style='padding: 8px; border: 1px solid #ddd;'><strong>Refund Date</strong></td>
+							<td style='padding: 8px; border: 1px solid #ddd;'>{refundDate:MMMM d, yyyy h:mm tt}</td>
+						</tr>
+						<tr>
+							<td style='padding: 8px; border: 1px solid #ddd;'><strong>Refund ID</strong></td>
+							<td style='padding: 8px; border: 1px solid #ddd;'>{refund.Id}</td>
+						</tr>
+						<tr>
+							<td style='padding: 8px; border: 1px solid #ddd;'><strong>Original Session ID</strong></td>
+							<td style='padding: 8px; border: 1px solid #ddd;'>{checkoutSessionId}</td>
+						</tr>
+						<tr>
+							<td style='padding: 8px; border: 1px solid #ddd;'><strong>Refund Status</strong></td>
+							<td style='padding: 8px; border: 1px solid #ddd;'>{refund.Status}</td>
+						</tr>
+						<tr>
+							<td style='padding: 8px; border: 1px solid #ddd;'><strong>Refund Amount</strong></td>
+							<td style='padding: 8px; border: 1px solid #ddd;'>{refundAmount.ToString("C")}</td>
+						</tr>
+						{reservationHtml}
+					</table>
+
+					<p>
+						Please allow a little time for the refund to appear on your bank or card statement, depending on your payment provider.
+					</p>
+
+					<p style='margin-bottom: 24px;'>
+						Visit:
+						<a href='https://cs3750-dusklabs-rvfamcamp-hba9fkevc6h2a4e4.centralus-01.azurewebsites.net/' target='_blank'>
+							RV Fam Camp
+						</a>
+					</p>
+
+					<hr style='border: none; border-top: 1px solid #dddddd; margin: 24px 0;' />
+
+					<p style='font-size: 12px; color: #777777; margin-bottom: 0;'>
+						Thank you,<br />
+						Dusk Labs - CS 3750 - Spring Semester 2026
+					</p>
+				</div>
+			</div>
+		</div>"
+			);
 		}
 
 		private async Task HandleChargeRefundedAsync(Charge charge)
