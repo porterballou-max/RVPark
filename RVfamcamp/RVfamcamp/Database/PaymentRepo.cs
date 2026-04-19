@@ -22,5 +22,10 @@ namespace RVfamcamp.Database
 			_databaseStatements.AddPayment(payment.total, payment.tax, payment.summary, payment.stripeID, payment.reservationID);
 			return true;
 		}
+
+		public paymentModel getPaymentByStripeID(string checkoutSessionId)
+		{
+			return _databaseStatements.getPaymentByStripeID(checkoutSessionId);
+		}
 	}
 }
