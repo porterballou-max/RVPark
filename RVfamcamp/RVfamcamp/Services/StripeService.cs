@@ -2,6 +2,7 @@
 using RVfamcamp.Models;
 using Microsoft.Extensions.Options;
 using Stripe.Checkout;
+using Stripe;
 using RVfamcamp.Pages.Payments;
 
 namespace RVfamcamp.Services
@@ -10,11 +11,13 @@ namespace RVfamcamp.Services
 	{
 		private readonly AppSettings _settings;
 		private readonly PricingSettings _pricingSettings;
+		private readonly DatabaseStatements _db;
 
-		public StripeService(IOptions<AppSettings> options, IOptions<PricingSettings> pricingSettings)
+		public StripeService(IOptions<AppSettings> options, IOptions<PricingSettings> pricingSettings, DatabaseStatements databaseStatements)
 		{
 			_settings = options.Value;
 			_pricingSettings = pricingSettings.Value;
+			_db = databaseStatements;
 		}
 
 		public async Task<string> CreateCheckoutSession(
@@ -27,6 +30,8 @@ namespace RVfamcamp.Services
 			{
 				_userID = userID.Value;
 			}
+		
+			var curUser = _db.GetUserById(_userID);
 
 			var stripeLineItems = new List<SessionLineItemOptions>();
 
@@ -53,11 +58,16 @@ namespace RVfamcamp.Services
 				SuccessUrl = _settings.BaseUrl + "/Payments/Confirmation?session_id={CHECKOUT_SESSION_ID}",
 				CancelUrl = _settings.BaseUrl + "/Payments/Cancelation?resId=" + resID,
 				ClientReferenceId = _userID.ToString(),
+				CustomerEmail = curUser.Email,
+				PaymentIntentData = new SessionPaymentIntentDataOptions
+				{
+					ReceiptEmail = curUser.Email
+				},
 				Metadata = new Dictionary<string, string>
-		{
-			{ "userId", _userID.ToString() },
-			{ "reservationId", resID.ToString() }
-		},
+	{
+		{ "userId", _userID.ToString() },
+		{ "reservationId", resID.ToString() }
+	},
 				LineItems = stripeLineItems
 			};
 
@@ -65,6 +75,38 @@ namespace RVfamcamp.Services
 			var session = await service.CreateAsync(options);
 
 			return session.Url;
+		}
+
+		public async Task<Refund> RefundFromCheckoutSessionAsync(string checkoutSessionId, decimal? amountDollars = null)
+		{
+			var sessionService = new SessionService();
+			var session = await sessionService.GetAsync(checkoutSessionId);
+
+			if (string.IsNullOrWhiteSpace(session.PaymentIntentId))
+			{
+				throw new InvalidOperationException("This Checkout Session does not have a PaymentIntent.");
+			}
+
+			var refundOptions = new RefundCreateOptions
+			{
+				PaymentIntent = session.PaymentIntentId,
+				Reason = "requested_by_customer"
+			};
+
+			// Only set Amount for a partial refund.
+			if (amountDollars.HasValue)
+			{
+				refundOptions.Amount = (long)(amountDollars.Value * 100m);
+			}
+
+			Console.WriteLine(
+				refundOptions.Amount.HasValue
+					? $"Refunding partial amount: {refundOptions.Amount.Value}"
+					: $"Refunding full amount for session {checkoutSessionId}"
+			);
+
+			var refundService = new RefundService();
+			return await refundService.CreateAsync(refundOptions);
 		}
 	}
 }

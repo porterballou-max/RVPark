@@ -50,12 +50,14 @@ public class AdminToolsModel : PageModel
         }
 
         _db.UpdateUserRole(id, newRole);
+        TempData["Flash.Success"] = "User role updated successfully.";
         return RedirectToPage();
     }
 
     public IActionResult OnPostUpdatePrice(int lotTypeId, decimal newPrice)
     {
         _db.UpdateLotTypeBasePrice(lotTypeId, newPrice);
+        TempData["Flash.Success"] = "Lot price updated successfully.";
         return RedirectToPage();
     }
 }

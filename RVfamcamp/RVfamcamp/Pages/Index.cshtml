@@ -4,6 +4,16 @@
     ViewData["Title"] = "RVfamcamp";
 }
 
+@if (TempData["Message"] != null)
+{
+    var messageType = TempData["MessageType"] ?? "info";
+
+    <div class="alert alert-@messageType alert-dismissible fade show" role="alert">
+        @TempData["Message"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
 <div class="hero-section text-dark text-center d-flex flex-column justify-content-center align-items-center">
     <h1>Your Family Camping Experience Starts Here</h1>
     <p>Reserve, manage your profile, and enjoy your stay at RVfamcamp.</p>

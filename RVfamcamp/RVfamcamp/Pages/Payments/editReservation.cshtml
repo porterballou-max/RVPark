@@ -1,0 +1,145 @@
+﻿@page
+@model RVfamcamp.Pages.Payments.EditModel
+@{
+    ViewData["Title"] = "Confirm Reservation Edit";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.errorMessage))
+{
+    <div class="alert alert-warning">
+        @Model.errorMessage
+    </div>
+}
+
+@if (Model.reservation == null)
+{
+    <p>Reservation could not be loaded.</p>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h3 class="card-title">Reservation Summary</h3>
+
+            <p><strong>Reservation ID:</strong> @Model.reservation.reservationId</p>
+            <p><strong>Confirmation Number:</strong> @Model.reservation.confirmationNumber</p>
+            <p><strong>Start Date:</strong> @Model.reservation.startDate.ToShortDateString()</p>
+            <p><strong>End Date:</strong> @Model.reservation.endDate.ToShortDateString()</p>
+            <p><strong>Number of Nights:</strong> @Model.numberOfNights</p>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h3 class="card-title">Lots Included</h3>
+
+            @if (Model.lotLines == null || Model.lotLines.Count == 0)
+            {
+                <p>No lots were found for this reservation.</p>
+            }
+            else
+            {
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Lot ID</th>
+                            <th>Type</th>
+                            <th>Nightly Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var lot in Model.lotLines)
+                        {
+                            <tr>
+                                <td>@lot.lotId</td>
+                                <td>@lot.typeName</td>
+                                <td>@lot.nightlyRate.ToString("C")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            @if (Model.isRefund)
+            {
+                <h3 class="card-title">Refund Summary</h3>
+            }
+            else
+            {
+                <h3 class="card-title">Additional Charge Summary</h3>
+            }
+
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <th>Original Subtotal</th>
+                        <td>@Model.originalSubtotal.ToString("C")</td>
+                    </tr>
+                    <tr>
+                        <th>Original Tax</th>
+                        <td>@Model.originalTax.ToString("C")</td>
+                    </tr>
+                    <tr>
+                        <th>Original Total</th>
+                        <td>@Model.originalTotal.ToString("C")</td>
+                    </tr>
+                    <tr>
+                        <th>Revised Subtotal</th>
+                        <td>@Model.subtotal.ToString("C")</td>
+                    </tr>
+                    <tr>
+                        <th>Revised Tax</th>
+                        <td>@Model.tax.ToString("C")</td>
+                    </tr>
+                    <tr>
+                        <th>Revised Total</th>
+                        <td>@Model.revisedTotal.ToString("C")</td>
+                    </tr>
+                    <tr>
+                        <th>Subtotal Difference</th>
+                        <td>@Model.deltaSubtotal.ToString("C")</td>
+                    </tr>
+                    <tr>
+                        <th>Tax Difference</th>
+                        <td>@Model.deltaTax.ToString("C")</td>
+                    </tr>
+                    <tr class="table-active">
+                        <th>
+                            @if (Model.isRefund)
+                            {
+                                <span>Total Refund</span>
+                            }
+                            else
+                            {
+                                <span>Total Due</span>
+                            }
+                        </th>
+                        <td><strong>@Model.total.ToString("C")</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            @if (Model.total > 0)
+            {
+                <form method="post">
+                    <input type="hidden" asp-for="resID" />
+                    <button type="submit" class="btn @(Model.isRefund ? "btn-warning" : "btn-primary")">
+                        @(Model.isRefund
+                                        ? $"Issue Refund {Model.total.ToString("C")}"
+                                        : $"Charge {Model.total.ToString("C")}")
+            </button>
+        </form>
+                }
+            else
+            {
+                <p class="text-muted mb-0">No payment adjustment is needed.</p>
+            }
+        </div>
+    </div>
+}

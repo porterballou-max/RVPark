@@ -72,6 +72,24 @@ namespace RVfamcamp.Services
             return Convert.ToInt32(userID);
         }
 
+        // This method allows for a check if the email is already in use.
+        // Prevents a bug that would break the app if trying to register a new account with an email already in the system.
+
+        public bool EmailExists(string email)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            conn.Open();
+
+            var cmd = new SqlCommand(
+                "SELECT COUNT(1) FROM UserAccount WHERE EmailAddress = @Email",
+                conn
+            );
+
+            cmd.Parameters.AddWithValue("@Email", email);
+
+            return (int)cmd.ExecuteScalar() > 0;
+        }
+
         /// <summary>
         /// Registers a user into the database
         /// </summary>
@@ -903,13 +921,39 @@ namespace RVfamcamp.Services
             var lotID = cmd.ExecuteScalar();
 
             return Convert.ToInt32(lotID);
-        }
+		}
 
-        public List<paymentModel> getPaymentsByUserID(int userID)
+		public paymentModel getPayment(int id)
+		{
+			using var conn = new SqlConnection(_connectionString);
+
+			var cmd = new SqlCommand("select p.paymentDate, p.reservationID, p.paymentsID, p.stripeCode, p.summary, p.taxAmount, p.total, r.userAccountID from Payments p\r\ninner join Reservation r on p.reservationID = r.reservationID\r\ninner join UserAccount ua on r.userAccountID = ua.userAccountID\r\nwhere p.paymentsID = @paymentID", conn);
+
+			cmd.Parameters.AddWithValue("@paymentID", id);
+			conn.Open();
+
+			using var reader = cmd.ExecuteReader();
+			paymentModel payment = new paymentModel();
+
+			if (reader.Read())
+			{
+				payment.paymentDate = reader.GetDateTime(0);
+				payment.reservationID = reader.GetInt32(1);
+				payment.id = reader.GetInt32(2);
+				payment.stripeID = reader.GetString(3);
+				payment.summary = reader.GetString(4);
+				payment.tax = reader.GetDecimal(5);
+				payment.total = reader.GetDecimal(6);
+                payment.userID = reader.GetInt32(7);
+			}
+			return payment;
+		}
+
+		public List<paymentModel> getPaymentsByUserID(int userID)
         {
 			using var conn = new SqlConnection(_connectionString);
 
-			var cmd = new SqlCommand("select p.paymentDate, p.reservationID, p.paymentsID, p.stripeCode, p.summary, p.taxAmount, p.total from Payments p\r\ninner join Reservation r on p.reservationID = r.reservationID\r\ninner join UserAccount ua on r.userAccountID = ua.userAccountID\r\nwhere ua.userAccountID = @userID", conn);
+			var cmd = new SqlCommand("select p.paymentDate, p.reservationID, p.paymentsID, p.stripeCode, p.summary, p.taxAmount, p.total, r.userAccountID from Payments p\r\ninner join Reservation r on p.reservationID = r.reservationID\r\ninner join UserAccount ua on r.userAccountID = ua.userAccountID\r\nwhere ua.userAccountID = @userID", conn);
 
 			cmd.Parameters.AddWithValue("@userID", userID);
             conn.Open();
@@ -927,14 +971,55 @@ namespace RVfamcamp.Services
 					stripeID = reader.GetString(3),
 					summary = reader.GetString(4),
 					tax = reader.GetDecimal(5),
-					total = reader.GetDecimal(6)
+					total = reader.GetDecimal(6),
+    				userID = reader.GetInt32(7)
 				});
 			}
 			return userPayments;
-
 		}
 
-        public void AddPayment(decimal total, decimal tax, string summary, string stripeCode, int reservationID)
+		public paymentModel getPaymentByStripeID(string stripeID)
+		{
+			using var conn = new SqlConnection(_connectionString);
+
+			var cmd = new SqlCommand("select p.paymentDate, p.reservationID, p.paymentsID, p.stripeCode, p.summary, p.taxAmount, p.total, r.userAccountID from Payments p\r\ninner join Reservation r on p.reservationID = r.reservationID\r\ninner join UserAccount ua on r.userAccountID = ua.userAccountID\r\nwhere p.stripeCode = @stripeID", conn);
+
+			cmd.Parameters.AddWithValue("@stripeID", stripeID);
+			conn.Open();
+
+			using var reader = cmd.ExecuteReader();
+            paymentModel payment = new paymentModel();
+
+			if (reader.Read())
+			{
+				Console.WriteLine($"Reader read good");
+				payment.paymentDate = reader.GetDateTime(0);
+				payment.reservationID = reader.GetInt32(1);
+				payment.id = reader.GetInt32(2);
+				payment.stripeID = reader.GetString(3);
+				payment.summary = reader.GetString(4);
+				payment.tax = reader.GetDecimal(5);
+                payment.total = reader.GetDecimal(6);
+                payment.userID = reader.GetInt32(7);
+			} else
+            {
+				Console.WriteLine($"Could not find payment for {stripeID}");
+			}
+			return payment;
+		}
+
+		public void updatePaymentSummaryWithRefund(string checkoutSessionId, string refundId, decimal refundAmount, string refundStatus)
+        {
+			using var conn = new SqlConnection(_connectionString);
+			var cmd = new SqlCommand("UPDATE Payments SET summary = @summary WHERE stripeCode = @stripeID", conn);
+            var curSummary = getPaymentByStripeID(checkoutSessionId).summary;
+			cmd.Parameters.AddWithValue("@stripeID", checkoutSessionId);
+			cmd.Parameters.AddWithValue("@summary", curSummary + $"\nPayment Refunded! Refund ID: {refundId}, Refund Amount: {refundAmount}, Status: {refundStatus}");
+			conn.Open();
+			cmd.ExecuteNonQuery();
+        }
+
+		public void AddPayment(decimal total, decimal tax, string summary, string stripeCode, int reservationID)
         {
             using var conn = new SqlConnection(_connectionString);
             var cmd = new SqlCommand("INSERT INTO Payments (total, taxAmount, paymentDate, summary, stripeCode, reservationID) VALUES (@Total, @Tax, GETDATE(), @Summary, @Stripe, @ReservationID)", conn);

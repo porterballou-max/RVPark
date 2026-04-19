@@ -4,6 +4,24 @@
     ViewData["Title"] = "Admin Tools";
 }
 
+@if (TempData["Flash.Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Flash.Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Flash.Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Flash.Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<h2>Employee Management</h2>
+
 <div class="container mt-4">
     <div class="d-flex align-items-center mb-4">
         <h2 class="mb-0">User & Employee Management</h2>
