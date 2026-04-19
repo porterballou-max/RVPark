@@ -41,13 +41,10 @@ public class AdminToolsModel : PageModel
 
     public IActionResult OnPostUpdateRole(int id, string newRole)
     {
-        // Get the ID of the admin currently logged in
         var currentUserId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
 
-        // Safety check: Don't allow an admin to change their own role or lock themselves
         if (id == currentUserId)
         {
-            // Optionally add a TempData message to alert the user
             TempData["ErrorMessage"] = "You cannot modify your own administrative permissions.";
             return RedirectToPage();
         }

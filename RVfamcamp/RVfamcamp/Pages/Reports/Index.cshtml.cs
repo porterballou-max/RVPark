@@ -34,7 +34,6 @@ namespace RVfamcamp.Pages
 
         public void OnPost()
         {
-            // Find the user ID
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out int loggedInUserID))
             {
@@ -45,7 +44,6 @@ namespace RVfamcamp.Pages
 
                 _db.LogReportGeneration(loggedInUserID, reportTitle);
             }
-            //If the claim for the UserID is missing, assume logged out and return to login screen.
             else
             {
                 RedirectToPage("/Login");
