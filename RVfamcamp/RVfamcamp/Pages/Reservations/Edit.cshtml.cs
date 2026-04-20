@@ -81,7 +81,7 @@ public class EditModel(DatabaseStatements db) : PageModel
         else
         {
             db.EditReservation(reservationID, StartDate, EndDate);
-			return RedirectToPage("Index");
+			return RedirectToPage("/payments/editReservation", new { resID = reservationID });
 		}
 
 		return RedirectToPage("Index");
