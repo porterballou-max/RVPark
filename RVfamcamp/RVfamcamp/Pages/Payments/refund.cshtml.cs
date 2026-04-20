@@ -90,9 +90,19 @@ namespace RVfamcamp.Pages.Payments
 				return RedirectToPage("/Index");
 			}
 
-			if (!userOwnsReservation(userId, resID))
+			var user = db.GetUserById(userId);
+
+			if (user == null)
 			{
-				return Forbid();
+				return Redirect("/Login/");
+			}
+
+			if (user.Role != "Admin")
+			{
+				if (!userOwnsReservation(userId, resID))
+				{
+					return Forbid();
+				}
 			}
 
 			if (!loadPaymentData(resID))
@@ -129,7 +139,7 @@ namespace RVfamcamp.Pages.Payments
 			}
 			Console.WriteLine("Starting Refund");
 			var refundData = await _stripe.RefundFromCheckoutSessionAsync(db.getPayment(db.getPaymentIdByReservation(reservation.reservationId)).stripeID);
-			return RedirectToPage("/Reservations/Delete", new {id = resID});
+			return RedirectToPage("/Payments/Confirmation", new { session_id = db.getPayment(db.getPaymentIdByReservation(resID)).stripeID});
 		}
 
 		private bool loadPaymentData(int reservationId)
