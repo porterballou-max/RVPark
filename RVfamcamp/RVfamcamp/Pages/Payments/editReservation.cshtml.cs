@@ -150,6 +150,8 @@ namespace RVfamcamp.Pages.Payments
 					userId,
 					resID
 				);
+
+				return Redirect(checkoutUrl);
 			}
 		}
 
