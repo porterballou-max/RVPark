@@ -52,9 +52,19 @@ namespace RVfamcamp.Pages.Payments
 				return RedirectToPage("/Index");
 			}
 
-			if (!userOwnsReservation(userId, resID))
+			var user = db.GetUserById(userId);
+
+			if (user == null)
 			{
-				return Forbid();
+				return Redirect("/Login/");
+			}
+
+			if (user.Role != "Admin")
+			{
+				if (!userOwnsReservation(userId, resID))
+				{
+					return Forbid();
+				}
 			}
 
 			if (!loadPaymentData(resID))
