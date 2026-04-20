@@ -138,8 +138,7 @@ namespace RVfamcamp.Pages.Payments
 				// Partial refund from the original checkout session.
 				// Your StripeService already supports an optional amount.
 				await _stripe.RefundFromCheckoutSessionAsync(payment.stripeID, total);
-
-				return RedirectToPage("/Index");
+				return RedirectToPage("Payments/Confirmation", new { session_id = payment.stripeID });
 			}
 			else
 			{
@@ -151,8 +150,6 @@ namespace RVfamcamp.Pages.Payments
 					userId,
 					resID
 				);
-
-				return Redirect(checkoutUrl);
 			}
 		}
 
