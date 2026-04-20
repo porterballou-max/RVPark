@@ -72,6 +72,24 @@ namespace RVfamcamp.Services
             return Convert.ToInt32(userID);
         }
 
+        public string GetUserEmail(int id)
+        {
+            using var conn = new SqlConnection(_connectionString);
+
+            var cmd = new SqlCommand("SELECT emailAddress FROM UserAccount WHERE userAccountID = @UserAccountID", conn);
+
+            cmd.Parameters.AddWithValue("@UserAccountID", id);
+
+            conn.Open();
+            var userEmail = cmd.ExecuteScalar();
+
+            if (userEmail == null || userEmail == DBNull.Value)
+            {
+                return "NoEmail";
+            }
+            return (string)userEmail;
+        }
+
         // This method allows for a check if the email is already in use.
         // Prevents a bug that would break the app if trying to register a new account with an email already in the system.
 
@@ -337,6 +355,22 @@ namespace RVfamcamp.Services
                     confirmationNumber = reader.GetInt32(3)
                 };
             }
+        }
+
+        // READ: GetUserAccountId
+        public int GetUserAccountByResId(int reservationId)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("SELECT userAccountID FROM Reservation WHERE ReservationID = @reservationId", conn);
+            cmd.Parameters.AddWithValue("@reservationId", reservationId);
+            conn.Open();
+            var userID = cmd.ExecuteScalar();
+
+            if (userID == null || userID == DBNull.Value)
+            {
+                return -1;
+            }
+            return Convert.ToInt32(userID);
         }
 
         // READ: Reservation

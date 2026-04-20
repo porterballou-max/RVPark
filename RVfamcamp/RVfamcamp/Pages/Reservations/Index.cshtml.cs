@@ -55,8 +55,15 @@ public class ReservationsIndexModel(DatabaseStatements db) : PageModel
 
 
     }
+    public string GetReservationUserEmail(int resId)
+    {
+        string userEmail;
+        int userAccountID;
+        userAccountID = db.GetUserAccountByResId(resId);
+        userEmail = db.GetUserEmail(userAccountID);
+        return userEmail;
+    }
 }
-
 // Reservations class
 public class Reservation
 {

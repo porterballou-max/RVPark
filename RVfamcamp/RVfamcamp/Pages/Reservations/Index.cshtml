@@ -17,6 +17,10 @@
             <th>startDate</th>
             <th>endDate</th>
             <th>confirmationNumber</th>
+            @if(@Model.shouldShowEditButton)
+            {
+                <th>User Email</th>
+            }
             <th></th>
         </tr>
     </thead>
@@ -30,6 +34,10 @@
                     <td>@r.startDate.ToShortDateString()</td>
                     <td>@r.endDate.ToShortDateString()</td>
                     <td>@r.confirmationNumber</td>
+                    @if(Model.shouldShowEditButton)
+                    {
+                        <td>@Model.GetReservationUserEmail(r.reservationId)</td>
+                    }
                     <td>
                         <a class="btn btn-sm btn-outline-primary" asp-page="/Reservations/Details" asp-route-id="@r.reservationId">View</a>
                         @if (Model.shouldShowEditButton)
