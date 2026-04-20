@@ -11,29 +11,49 @@ public class ReservationsIndexModel(DatabaseStatements db) : PageModel
 {
     public List<Reservation> Reservations { get; set; }
     public string? Message { get; set; }
+    public bool shouldShowEditButton { get; set; }
 
     public void OnGet()
     {
-        Reservations = new List<Reservation>();
-        string? email = User.FindFirst(ClaimTypes.Email)?.Value;
-
-        // Ensure there is a user logged in
-        if (email != null && db != null)
+        string? role = User.FindFirst(ClaimTypes.Role)?.Value;
+        if (role == "Admin")
         {
-            var userID = db.GetUserAccountID(email);
-
-            // Ensure there is a userAccount tied to username
-            if (userID != -1)
+            shouldShowEditButton = true;
+            Reservations = new List<Reservation>();
+            Reservations = db.GetAllReservations();
+            
+            // for payments
+            foreach (var reservation in Reservations)
             {
-                Reservations = db.GetUsersReservations(userID);
-                foreach (var reservation in Reservations)
-                    reservation.isPayed = db.IsReservationPaid(reservation.reservationId); 
+                reservation.isPayed = db.IsReservationPaid(reservation.reservationId);
             }
         }
         else
         {
-            Message = "Please click 'Create Reservation' to make a reservation.";
+            shouldShowEditButton = false;
+            Reservations = new List<Reservation>();
+            string? email = User.FindFirst(ClaimTypes.Email)?.Value;
+
+            // Ensure there is a user logged in
+            if (email != null && db != null)
+            {
+                var userID = db.GetUserAccountID(email);
+
+                // Ensure there is a userAccount tied to username
+                if (userID != -1)
+                {
+                    Reservations = db.GetUsersReservations(userID);
+                    foreach (var reservation in Reservations)
+                        reservation.isPayed = db.IsReservationPaid(reservation.reservationId);
+                }
+            }
+            else
+            {
+                Message = "Please click 'Create Reservation' to make a reservation.";
+            }
         }
+
+
     }
 }
 

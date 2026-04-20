@@ -19,14 +19,7 @@ namespace RVfamcamp.Pages.Reservations
 			}
 			else
             {
-                // Get all lots associated with res and update isoccupied
-                List<Lot> lots = new List<Lot>();
-                lots = db.GetLotsByReservationId(id);
-
-                foreach (var lot in lots)
-                {
-                    db.UpdateLotOccupancy(lot.LotId, false);
-                }
+                // Get all lots associated with res and remove
                 db.ClearLotsFromReservation(id);
                 db.RemoveReservationById(id);
 

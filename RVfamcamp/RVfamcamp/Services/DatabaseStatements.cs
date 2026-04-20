@@ -275,6 +275,19 @@ namespace RVfamcamp.Services
 
 
         }
+
+        // EDIT: Reservations
+        public void EditReservation(int reservationID, DateOnly StartDate, DateOnly EndDate)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            var cmd = new SqlCommand("UPDATE Reservation SET StartDate = @StartDate, EndDate = @EndDate WHERE ReservationID = @ReservationID", conn);
+            cmd.Parameters.AddWithValue("@StartDate", StartDate);
+            cmd.Parameters.AddWithValue("@EndDate", EndDate);
+            cmd.Parameters.AddWithValue("@ReservationID", reservationID);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
         
         // READ: Reservations
         public List<Reservation> GetAllReservations()
@@ -291,6 +304,9 @@ namespace RVfamcamp.Services
                     new Reservation
                     {
                         reservationId = reader.GetInt32(0),
+                        startDate = reader.GetDateTime(1),
+                        endDate = reader.GetDateTime(2),
+                        confirmationNumber = reader.GetInt32(3)
                     }
                     
                 );
@@ -857,6 +873,48 @@ namespace RVfamcamp.Services
                 FROM Lot l
                 WHERE l.IsOccupied = 0
                 AND l.LotId NOT IN (
+                    SELECT lr.LotId
+                    FROM LotReservation lr
+                    JOIN Reservation r ON lr.ReservationId = r.ReservationID
+                    WHERE NOT (
+                        r.EndDate <= @StartDate OR r.StartDate >= @EndDate
+                    )
+                )
+                """, conn);
+
+            cmd.Parameters.Add("@StartDate", SqlDbType.Date)
+                .Value = startDate.ToDateTime(TimeOnly.MinValue);
+
+            cmd.Parameters.Add("@EndDate", SqlDbType.Date)
+                .Value = endDate.ToDateTime(TimeOnly.MinValue);
+
+            conn.Open();
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                lots.Add(new Lot
+                {
+                    LotId = reader.GetInt32(0),
+                    IsOccupied = reader.GetBoolean(1),
+                    LotType = reader.GetInt32(2)
+                });
+            }
+
+            return lots;
+
+        }
+        public List<Lot> GetUnreservedLotsOverRange(DateOnly startDate, DateOnly endDate)
+        {
+            List<Lot> lots = new List<Lot>();
+
+            using var conn = new SqlConnection(_connectionString);
+
+            using var cmd = new SqlCommand(
+                """
+                SELECT l.LotId, l.IsOccupied, l.LotType
+                FROM Lot l
+                WHERE l.LotId NOT IN (
                     SELECT lr.LotId
                     FROM LotReservation lr
                     JOIN Reservation r ON lr.ReservationId = r.ReservationID

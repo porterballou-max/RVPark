@@ -54,7 +54,7 @@ public class CreateModel(DatabaseStatements db) : PageModel
         if (!ModelState.IsValid)
             return Page();
 
-        Available_Lots = (List<Lot>?)db.GetVacantLots(StartDate, EndDate);
+        Available_Lots = (List<Lot>?)db.GetUnreservedLotsOverRange(StartDate, EndDate);
         Available_Lots_Types = (List<LotType>?)db.GetAllLotTypes();
 
         return Page();
