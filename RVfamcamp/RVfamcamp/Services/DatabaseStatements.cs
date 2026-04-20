@@ -529,7 +529,7 @@ namespace RVfamcamp.Services
                 JOIN UserAccount u ON r.userAccountID = u.userAccountID
                 JOIN LotReservation lr ON r.reservationID = lr.reservationID
                 JOIN Lot l ON lr.lotID = l.lotID
-                WHERE r.startDate >= @Start AND r.endDate <= @End", conn);
+                WHERE r.startDate <= @End AND r.endDate >= @Start", conn);
 
             cmd.Parameters.AddWithValue("@Start", startRange);
             cmd.Parameters.AddWithValue("@End", endRange);
